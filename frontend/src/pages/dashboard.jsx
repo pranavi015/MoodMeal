@@ -34,7 +34,6 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
-      {/* Header */}
       <header className="bg-white shadow-md border-b-4 border-[#4ADE80]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-between items-center">
           <div className="flex items-center">
@@ -60,9 +59,7 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Welcome Card */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 border-4 border-[#4ADE80]">
           <h2 className="text-4xl font-extrabold text-gray-800 mb-2">
             Welcome back, {user.name}! 🎉
@@ -72,9 +69,7 @@ function Dashboard() {
           </p>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Meals Card */}
           <div className="bg-gradient-to-br from-green-400 to-green-600 p-8 rounded-3xl shadow-xl transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <Utensils className="w-12 h-12 text-white" />
@@ -86,7 +81,6 @@ function Dashboard() {
             <p className="text-6xl font-extrabold text-white">0</p>
           </div>
 
-          {/* Mood Logs Card */}
           <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-8 rounded-3xl shadow-xl transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <Heart className="w-12 h-12 text-white" />
@@ -98,7 +92,6 @@ function Dashboard() {
             <p className="text-6xl font-extrabold text-white">0</p>
           </div>
 
-          {/* Healthy Swaps Card */}
           <div className="bg-gradient-to-br from-purple-400 to-purple-600 p-8 rounded-3xl shadow-xl transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <Sparkles className="w-12 h-12 text-white" />
@@ -111,8 +104,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Coming Soon Card */}
-        <div className="bg-gradient-to-br from-orange-100 to-pink-100 rounded-3xl shadow-xl p-10 border-4 border-orange-300">
+        {/* <div className="bg-gradient-to-br from-orange-100 to-pink-100 rounded-3xl shadow-xl p-10 border-4 border-orange-300">
           <div className="flex items-center gap-4 mb-4">
             <div className="bg-orange-500 p-4 rounded-2xl">
               <Sparkles className="w-8 h-8 text-white" />
@@ -124,7 +116,7 @@ function Dashboard() {
             is under development. Get ready for an amazing experience that will help you cultivate 
             a happier, healthier you through mindful eating! ✨
           </p>
-        </div>
+        </div> */}
       </main>
     </div>
   );

@@ -5,8 +5,6 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// This function checks if the user is logged in before running any analysis.
-// It uses the special code (JWT) sent with the request to confirm the user's identity.
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -19,7 +17,6 @@ const authenticateToken = (req, res, next) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid token' });
     }
-    // If the token is good, we attach the user's ID to the request for later use.
     req.user = user; 
     next();
   });
@@ -29,7 +26,6 @@ router.get('/mood-calendar', authenticateToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
-    // 1. Prepare the database query
     let whereClause = { userId: req.user.userId };
 
     if (startDate && endDate) {
@@ -39,10 +35,8 @@ router.get('/mood-calendar', authenticateToken, async (req, res) => {
       };
     }
 
-    // 2. Fetch all meals and their related moods in one go (very efficient!)
     const meals = await prisma.meal.findMany({
       where: whereClause,
-      // We use 'include' to automatically get the linked MoodLog data.
       include: {
         moods: {
           select: {
@@ -55,29 +49,26 @@ router.get('/mood-calendar', authenticateToken, async (req, res) => {
       orderBy: { timestamp: 'desc' }
     });
     
-    // 3. Organize data by date
     const calendarData = {};
     meals.forEach(meal => {
-      const date = meal.timestamp.toISOString().split('T')[0]; // Gets the date part (YYYY-MM-DD)
+      const date = meal.timestamp.toISOString().split('T')[0]; 
       
       if (!calendarData[date]) {
         calendarData[date] = {
           date,
           meals: [],
-          moodIntensities: [] // Temporary place to store all mood numbers for the day
+          moodIntensities: [] 
         };
       }
       
-      // Add meal details
       calendarData[date].meals.push({
           id: meal.id,
           mealType: meal.mealType,
           foods: meal.foods,
           timestamp: meal.timestamp,
-          moods: meal.moods, // Attach the full mood details
+          moods: meal.moods, 
       });
       
-      // Collect all mood numbers for the daily average
       meal.moods.forEach(mood => {
           if (mood.intensity) {
               calendarData[date].moodIntensities.push(mood.intensity);
@@ -85,18 +76,17 @@ router.get('/mood-calendar', authenticateToken, async (req, res) => {
       });
     });
     
-    // 4. Calculate the average mood for each day
     const result = Object.values(calendarData).map(day => {
         const totalIntensity = day.moodIntensities.reduce((sum, intensity) => sum + intensity, 0);
         const avgMoodIntensity = day.moodIntensities.length > 0
-            ? (totalIntensity / day.moodIntensities.length).toFixed(2) // Calculate average
+            ? (totalIntensity / day.moodIntensities.length).toFixed(2) 
             : null;
             
-        delete day.moodIntensities; // Remove the temporary number list
+        delete day.moodIntensities; 
         
         return {
             ...day,
-            avgMoodIntensity: parseFloat(avgMoodIntensity) // The main number for the calendar
+            avgMoodIntensity: parseFloat(avgMoodIntensity) 
         };
     });
     
@@ -115,7 +105,6 @@ router.post('/achievements', authenticateToken, async (req, res) => {
   }
 
   try {
-    // Example: fetch all swaps for the user that meet satisfaction criteria
     const swaps = await prisma.cravingSwaps.findMany({
       where: {
         userId: req.user.userId,
@@ -132,7 +121,6 @@ router.post('/achievements', authenticateToken, async (req, res) => {
 
 router.get('/patterns', authenticateToken, async (req, res) => {
   try {
-    // 1. Fetch all meals and moods again (efficiently with 'include')
     const meals = await prisma.meal.findMany({
       where: { userId: req.user.userId },
       include: {
@@ -145,24 +133,19 @@ router.get('/patterns', authenticateToken, async (req, res) => {
       }
     });
     
-    // 2. Analyze mood improvements by food
     const foodMoodMap = {};
     
     meals.forEach(meal => {
-      // Find the two crucial moods: Pre-Meal and Post-Meal
       const preMood = meal.moods.find(m => m.timeContext === 'Pre-Meal');
       const postMood = meal.moods.find(m => m.timeContext === 'Post-Meal');
 
-      // Check if we have reliable data (both moods must exist)
       if (preMood && postMood && preMood.intensity && postMood.intensity) {
         const preIntensity = preMood.intensity;
         const postIntensity = postMood.intensity;
 
-        // Split the "foods" string into a list of individual items
         const foods = meal.foods.split(',').map(f => f.trim().toLowerCase()).filter(f => f.length > 0);
         
         foods.forEach(food => {
-          // Initialize the counter for this food if it's the first time seeing it
           if (!foodMoodMap[food]) {
             foodMoodMap[food] = {
               food,
@@ -175,28 +158,25 @@ router.get('/patterns', authenticateToken, async (req, res) => {
           
           foodMoodMap[food].count++;
           
-          // Use the reliable numerical intensity for comparison (THE CRITICAL FIX!)
           if (postIntensity > preIntensity) {
-            foodMoodMap[food].moodImprovement++; // Mood got better
+            foodMoodMap[food].moodImprovement++; 
           } else if (postIntensity < preIntensity) {
-            foodMoodMap[food].moodDecline++;    // Mood got worse
+            foodMoodMap[food].moodDecline++;    
           } else {
-            foodMoodMap[food].moodStable++;     // Mood stayed the same
+            foodMoodMap[food].moodStable++;     
           }
         });
       }
     });
     
-    // 3. Find the Top 10 Mood-Boosting Foods
     const topFoods = Object.values(foodMoodMap)
-      .filter(f => f.count >= 2) // Only show foods logged at least twice
-      .sort((a, b) => b.moodImprovement - a.moodImprovement) // Sort by most improvements
+      .filter(f => f.count >= 2) 
+      .sort((a, b) => b.moodImprovement - a.moodImprovement) 
       .slice(0, 10);
     
-    // 4. Calculate Weekly Mood Trends
+  
     const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // Date from 7 days ago
-    
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const recentMeals = meals.filter(m => new Date(m.timestamp) >= sevenDaysAgo);
     
     const weeklyTrend = {
@@ -225,7 +205,6 @@ router.get('/patterns', authenticateToken, async (req, res) => {
       
       weeklyTrend.avgMoodBefore = avgBefore.toFixed(2);
       weeklyTrend.avgMoodAfter = avgAfter.toFixed(2);
-      // Mood improvement is the overall change in the weekly average
       weeklyTrend.moodImprovement = (avgAfter - avgBefore).toFixed(2); 
     }
     
@@ -244,19 +223,18 @@ router.get('/achievements', authenticateToken, async (req, res) => {
   try {
     const meals = await prisma.meal.findMany({
       where: { userId: req.user.userId },
-      orderBy: { timestamp: 'asc' }, // ascending for streak calculation
+      orderBy: { timestamp: 'asc' }, 
       include: { moods: true }
     });
 
     if (meals.length === 0) return res.json({ message: 'No meals logged yet', achievements: {} });
 
-    // 1. Streaks calculation
     let streak = 1;
     let maxStreak = 1;
     for (let i = 1; i < meals.length; i++) {
       const prevDay = new Date(meals[i - 1].timestamp).setHours(0,0,0,0);
       const currDay = new Date(meals[i].timestamp).setHours(0,0,0,0);
-      if (currDay - prevDay === 86400000) { // difference of 1 day in ms
+      if (currDay - prevDay === 86400000) { 
         streak++;
         if (streak > maxStreak) maxStreak = streak;
       } else if (currDay !== prevDay) {
@@ -264,7 +242,6 @@ router.get('/achievements', authenticateToken, async (req, res) => {
       }
     }
 
-    // 2. Balanced days calculation
     const balancedDays = {};
     meals.forEach(meal => {
       const preMood = meal.moods.find(m => m.timeContext === 'Pre-Meal');
@@ -273,10 +250,8 @@ router.get('/achievements', authenticateToken, async (req, res) => {
       const date = meal.timestamp.toISOString().split('T')[0];
       if (!balancedDays[date]) balancedDays[date] = { foods: new Set(), moodGood: false };
 
-      // Count foods
       meal.foods.split(',').forEach(f => balancedDays[date].foods.add(f.trim().toLowerCase()));
 
-      // Mood check
       if (preMood && postMood && postMood.intensity >= preMood.intensity) {
         balancedDays[date].moodGood = true;
       }
@@ -285,7 +260,6 @@ router.get('/achievements', authenticateToken, async (req, res) => {
     const balancedDayCount = Object.values(balancedDays)
       .filter(d => d.moodGood && d.foods.size >= 3).length;
 
-    // 3. New foods
     const seenFoods = new Set();
     const newFoods = [];
     meals.forEach(meal => {
