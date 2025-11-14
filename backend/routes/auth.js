@@ -114,6 +114,9 @@ router.post('/signup', async (req, res) => {
     
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    if (!hashedPassword) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
     
     // Create user
     const user = await prisma.user.create({
@@ -123,10 +126,25 @@ router.post('/signup', async (req, res) => {
         name
       }
     });
+
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not configured');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
     
-    res.status(201).json({ 
-      message: 'Account created successfully', 
-      userId: user.id 
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        name: user.name 
+      } 
     });
   } catch (error) {
     console.error('Signup error:', error);

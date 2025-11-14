@@ -41,8 +41,10 @@ function AuthForm({ mode }) {
       const response = await axios.post(`${API_URL}${endpoint}`, payload);
       console.log(response)
       if (isSignup) {
-        showMessage('Account created successfully! Redirecting to login...', 'success');
-        setTimeout(() => navigate('/login'), 2000);
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        showMessage('Account created successfully! Redirecting to dashboard...', 'success');
+        setTimeout(() => navigate('/dashboard'), 1500);
       } else {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
