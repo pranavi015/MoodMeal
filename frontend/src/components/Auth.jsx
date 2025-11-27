@@ -62,7 +62,6 @@ function AuthForm({ mode }) {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 min-h-[650px]">
         
-        {/* Left Panel - Form */}
         <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-white">
           <div className="flex items-center mb-10">
             <Leaf className="w-9 h-9 mr-2.5 text-[#4ADE80]" />
@@ -160,7 +159,7 @@ function AuthForm({ mode }) {
           </form>
         </div>
 
-        {/* Right Panel */}
+         {/* Right Panel  */}
         <div className="hidden lg:block relative overflow-hidden rounded-r-[2.5rem]">
           <img
             src="/food-bowl.jpg"

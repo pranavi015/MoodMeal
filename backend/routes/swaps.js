@@ -22,7 +22,6 @@ const swapDatabase = {
   };
   
 const prisma = new PrismaClient();
-//middleware jwt
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -90,7 +89,6 @@ router.post('/accept', authenticateToken, async (req, res) => {
 });
 
   
-// swap satisfaction rating
 router.put('/:id/rate', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { rating } = req.body;
@@ -115,8 +113,6 @@ router.put('/:id/rate', authenticateToken, async (req, res) => {
   });
   
 
-//history
-// GET /history - Fetch user's past swaps
 router.get('/history', authenticateToken, async (req, res) => {
     try {
       const history = await prisma.cravingSwaps.findMany({

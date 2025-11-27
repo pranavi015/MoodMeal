@@ -6,6 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+ 
 router.post('/signup', async (req, res) => {
   try {
     const { email, password, name } = req.body;
@@ -100,7 +101,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed. Please try again.' });
+    res.status(500).json({ error: error.messgae });
   }
 });
 

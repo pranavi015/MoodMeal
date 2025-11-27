@@ -7,64 +7,85 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
-  id             Int            @id @default(autoincrement())
-  email          String         @unique
-  password       String
-  name           String?
-  avatar         String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  
-  meals          Meal[]
-  moodLogs       MoodLog[]
-  cravingSwaps   CravingSwaps[]
+  id            Int             @id @default(autoincrement())
+  email         String          @unique
+  password      String
+  name          String?
+  avatar        String?
+  preferences   Json?           // For reminders/theme etc.
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  userMeals     UserMeal[]      @relation(onDelete: Cascade)
+  moodLogs      MoodLog[]       @relation(onDelete: Cascade)
+  cravingSwaps  CravingSwaps[]  @relation(onDelete: Cascade)
 }
 
 
-model Meal {
-  id            Int        @id @default(autoincrement())
-  userId        Int
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mealType      String     // 'breakfast', 'lunch', 'dinner', 'snack'
-  foods         String     @db.Text 
-  photo         String?
-  moodBefore    String?
-  moodAfter     String?
-  cravings      String?    @db.Text
-  notes         String?    @db.Text
-  timestamp     DateTime   @default(now())
-  createdAt     DateTime   @default(now())
-  
-  moodLogs      MoodLog[] 
+//
+// USER-LOGGED MEALS
+//
+model UserMeal {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mealType    String     // breakfast, lunch, dinner, snack
+  foods       String     @db.Text
+  photo       String?
+  moodBefore  String?
+  moodAfter   String?
+  cravings    String?    @db.Text
+  notes       String?    @db.Text
+
+  timestamp   DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+
+  moodLogs    MoodLog[]
+
   @@index([userId])
+}
+
+//
+// CURATED MEALS (for recommendations, browsing)
+//
+model CuratedMeal {
+  id          Int        @id @default(autoincrement())
+  name        String
+  category    String
+  description String?
+  imageUrl    String
 }
 
 model MoodLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  mealId    Int?     // optional, remove @unique
-  meal      Meal?    @relation(fields: [mealId], references: [id])
-  moodState String   // 'Energetic', 'Stressed', 'Calm'
-  intensity Int      // 1-10 scale for analysis
-  timestamp DateTime @default(now())
-  
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id])
+
+  userMealId Int?
+  userMeal   UserMeal? @relation(fields: [userMealId], references: [id])
+
+  moodState  String
+  intensity  Int
+  timestamp  DateTime  @default(now())
+
   @@index([userId])
 }
 
-
 model CravingSwaps {
-  id                   Int       @id @default(autoincrement())
-  userId               Int
-  user                 User      @relation(fields: [userId], references: [id])
-  cravingType          String    // e.g., "Sweet", "Salty"
-  originalItem         String    @db.Text
-  suggestedSwap        String?   @db.Text   // The healthy alternative offered
-  accepted             Boolean   @default(false)
-  satisfactionRating   Int?      // User's rating of the swap (1-5)
-  createdAt            DateTime  @default(now())
-  completedAt          DateTime?
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  user               User      @relation(fields: [userId], references: [id])
+
+  cravingType        String
+  originalItem       String    @db.Text
+  suggestedSwap      String?   @db.Text
+  accepted           Boolean   @default(false)
+  satisfactionRating Int?
+  createdAt          DateTime  @default(now())
+  completedAt        DateTime?
 
   @@index([userId])
 }

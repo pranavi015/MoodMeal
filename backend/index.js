@@ -1,28 +1,31 @@
 const express = require('express');
-const cors = require('cors'); // UNCOMMENTED
+const cors = require('cors');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const mealRoutes = require('./routes/meals');
 const insightsRoutes = require('./routes/insights');
 const swapsRoutes = require('./routes/swaps');
+const feedRoutes = require("./routes/feed");
+const userRoutes = require('./routes/user');
 
 const app = express();
 
-// Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL,
   credentials: true
-})); // ENABLED CORS
+})); 
 app.use(express.json());
 
-// Routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/meals', mealRoutes);  
 app.use('/api/insights', insightsRoutes); 
 app.use('/api/swaps', swapsRoutes);
+app.use("/api/feed", feedRoutes);
+app.use('/user', userRoutes);
 
-// Health check route
+
 app.get('/', (req, res) => {
   res.json({ message: 'MoodMeal API is running!' });
 });
@@ -30,7 +33,8 @@ app.get('/', (req, res) => {
 if(process.env.NODE_ENV === "development"){
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
-module.exports = app
+
+module.exports = app;
