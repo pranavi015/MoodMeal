@@ -24,12 +24,86 @@ const authenticateToken = (req, res, next) => {
 
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const meals = await prisma.meal.findMany({
-            where: { userId: req.user.userId },
-            orderBy: { timestamp: 'desc' }
+        // Extract query params with defaults
+        const {
+            page = 1,
+            limit = 10,
+            search = '',
+            sortBy = 'timestamp',
+            sortOrder = 'desc',
+            filterMealType,
+            filterMood
+        } = req.query;
+
+        const pageNumber = parseInt(page);
+        const pageSize = parseInt(limit);
+
+        const skip = (pageNumber - 1) * pageSize;
+        const take = pageSize;
+
+        // Build WHERE clause
+        const where = {
+            userId: req.user.userId,
+            AND: []
+        };
+
+        // Search text in foods field
+        if (search) {
+            where.AND.push({
+                foods: {
+                    contains: search,
+                }
+            });
+        }
+
+        // Filter by meal type
+        if (filterMealType) {
+            where.AND.push({
+                mealType: filterMealType
+            });
+        }
+
+        // Filter by moodAfter
+        if (filterMood) {
+            where.AND.push({
+                moodAfter: filterMood
+            });
+        }
+
+        // Sorting options
+        const validSortFields = ['timestamp', 'mealType'];
+        const sortField = validSortFields.includes(sortBy) ? sortBy : 'timestamp';
+
+        const validSortOrder = ['asc', 'desc'];
+        const order = validSortOrder.includes(sortOrder) ? sortOrder : 'desc';
+
+        // Query meals
+        const [meals, total] = await Promise.all([
+            prisma.userMeal.findMany({
+                where,
+                orderBy: {
+                    [sortField]: order
+                },
+                skip,
+                take
+            }),
+            prisma.userMeal.count({ where })
+        ]);
+
+        const totalPages = Math.ceil(total / pageSize);
+
+        res.json({
+            meals,
+            pagination: {
+                total,
+                page: pageNumber,
+                limit: pageSize,
+                totalPages
+            }
         });
-        res.json(meals);
+
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Failed to fetch meals' });
     }
 });
@@ -37,7 +111,7 @@ router.get('/', authenticateToken, async (req, res) => {
 //get a single meal
 router.get('/:id', authenticateToken, async (req, res) => {
     try {
-        const meal = await prisma.meal.findFirst({
+        const meal = await prisma.userMeal.findFirst({
             where: { 
                 id: parseInt(req.params.id),
                 userId: req.user.userId 
@@ -67,7 +141,7 @@ router.post('/', authenticateToken, async (req, res) => {
         //     return res.status(400).json({ error: 'foods must be a string or an array' });
         // }
 
-        const meal = await prisma.meal.create({
+        const meal = await prisma.userMeal.create({
             data: {
                 userId: req.user.userId,
                 mealType,
@@ -93,7 +167,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const { mealType, foods, photo, moodBefore, moodAfter, cravings, notes } = req.body;
         
-        const meal = await prisma.meal.update({
+        const meal = await prisma.userMeal.update({
             where: {
                 id_userId: { 
                   id: parseInt(req.params.id),
@@ -123,7 +197,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 //delete meal
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
-        const meal = await prisma.meal.delete({
+        const meal = await prisma.userMeal.delete({
             where: { 
                 id_userId: parseInt(req.params.id),
                 userId: req.user.userId 

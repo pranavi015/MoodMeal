@@ -1,18 +1,42 @@
 import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
-import { Utensils, Plus } from 'lucide-react';
+import { Utensils, Plus, Edit, Trash2 } from 'lucide-react';
 import api from '../utils/api';
 
+const MEAL_TYPES = ['all', 'breakfast', 'lunch', 'dinner', 'snack'];
+
 function Meals() {
+  // State
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(6); 
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('timestamp');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [filterMealType, setFilterMealType] = useState('all');
+
   useEffect(() => {
     const loadMeals = async () => {
+      setLoading(true);
       try {
-        const res = await api.get('/meals');
-        const data = res.data.meals || res.data || [];
-        setMeals(data);
+        const params = {
+          page,
+          limit,
+          search: search || undefined,
+          sortBy,
+          sortOrder,
+          filterMealType: filterMealType !== 'all' ? filterMealType : undefined,
+        };
+
+        const query = new URLSearchParams(params).toString();
+        const res = await api.get(`/meals?${query}`);
+
+        setMeals(res.data.meals || []);
+        setTotalPages(res.data.pagination?.totalPages || 1);
       } catch (error) {
         console.error("Error fetching meals:", error);
       } finally {
@@ -21,7 +45,45 @@ function Meals() {
     };
 
     loadMeals();
-  }, []);
+  }, [page, limit, search, sortBy, sortOrder, filterMealType]);
+
+  // Handlers
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPage(1);
+  };
+
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+    setPage(1);
+  };
+
+  const handleSortOrderChange = (e) => {
+    setSortOrder(e.target.value);
+    setPage(1);
+  };
+
+  const handleFilterClick = (type) => {
+    setFilterMealType(type);
+    setPage(1);
+  };
+
+  const goToPage = (pageNum) => {
+    setPage(pageNum);
+  };
+
+  const paginationButtons = [];
+  for(let i = 1; i <= totalPages; i++) {
+    paginationButtons.push(
+      <button
+        key={i}
+        onClick={() => goToPage(i)}
+        className={`px-3 py-1 rounded ${page === i ? 'bg-green-400 text-white' : 'bg-gray-200'}`}
+      >
+        {i}
+      </button>
+    );
+  }
 
   return (
     <Layout>
@@ -30,21 +92,61 @@ function Meals() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-extrabold text-gray-800">My Meals</h1>
-
-          <button className="flex items-center gap-2 px-6 py-3 bg-[#4ADE80] text-white rounded-xl font-bold hover:bg-[#3BC96E] transition-all">
+          <button className="flex items-center gap-2 px-6 py-3 bg-green-400 text-white rounded-xl font-bold hover:bg-green-500 transition-all">
             <Plus className="w-5 h-5" />
             Log New Meal
           </button>
         </div>
 
-        {/* Loading State */}
+        {/* Controls */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search meals by food..."
+            value={search}
+            onChange={handleSearchChange}
+            className="border rounded px-4 py-2 w-full md:w-1/3"
+          />
+
+          {/* Sort */}
+          <div className="flex items-center gap-2">
+            <select value={sortBy} onChange={handleSortChange} className="border rounded px-3 py-2">
+              <option value="timestamp">Sort by Date</option>
+              <option value="mealType">Sort by Meal Type</option>
+            </select>
+
+            <select value={sortOrder} onChange={handleSortOrderChange} className="border rounded px-3 py-2">
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-2 overflow-x-auto">
+            {MEAL_TYPES.map(type => (
+              <button
+                key={type}
+                onClick={() => handleFilterClick(type)}
+                className={`px-4 py-2 rounded font-semibold ${
+                  filterMealType === type ? 'bg-green-400 text-white' : 'bg-gray-200'
+                }`}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading */}
         {loading && (
           <div className="bg-white rounded-3xl shadow-lg p-12 text-center">
             <p className="text-gray-500 text-lg">Loading meals...</p>
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty */}
         {!loading && meals.length === 0 && (
           <div className="bg-white rounded-3xl shadow-lg p-12 text-center">
             <Utensils className="w-24 h-24 mx-auto text-gray-300 mb-6" />
@@ -52,7 +154,7 @@ function Meals() {
             <p className="text-gray-600 mb-8">
               Start tracking your meals to see insights about your eating habits!
             </p>
-            <button className="px-8 py-4 bg-[#4ADE80] text-white rounded-xl font-bold text-lg hover:bg-[#3BC96E] transition-all">
+            <button className="px-8 py-4 bg-green-400 text-white rounded-xl font-bold text-lg hover:bg-green-500 transition-all">
               Log Your First Meal
             </button>
           </div>
@@ -61,35 +163,66 @@ function Meals() {
         {/* Meals Grid */}
         {!loading && meals.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-            {meals.map((meal) => (
+            {meals.map(meal => (
               <div
                 key={meal.id}
                 className="bg-white rounded-3xl shadow-lg p-6 hover:shadow-xl transition-all"
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-gray-800">{meal.name}</h2>
-                  <span className="text-3xl">{meal.mood}</span>
+                  <h2 className="text-xl font-bold text-gray-800 capitalize">{meal.mealType}</h2>
+                  <span className="text-3xl">{meal.moodAfter || '😐'}</span>
                 </div>
 
                 {meal.photo && (
                   <img
                     src={meal.photo}
-                    alt={meal.name}
+                    alt={`${meal.mealType} photo`}
                     className="w-full h-40 object-cover rounded-xl mb-4"
                   />
                 )}
 
-                {meal.notes && (
-                  <p className="text-gray-600 mb-4">{meal.notes}</p>
-                )}
+                {meal.notes && <p className="text-gray-600 mb-4">{meal.notes}</p>}
 
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-400 mb-4">
                   {new Date(meal.timestamp).toLocaleString()}
                 </p>
+
+                {/* Edit/Delete Buttons */}
+                <div className="flex gap-4">
+                  <button className="flex items-center gap-2 text-blue-600 hover:underline">
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button className="flex items-center gap-2 text-red-600 hover:underline">
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
+          </div>
+        )}
 
+        {/* Pagination Controls */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-8 flex justify-center gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => goToPage(page - 1)}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {paginationButtons}
+
+            <button
+              disabled={page === totalPages}
+              onClick={() => goToPage(page + 1)}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         )}
 

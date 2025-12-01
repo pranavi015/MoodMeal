@@ -14,13 +14,13 @@ model User {
   password      String
   name          String?
   avatar        String?
-  preferences   Json?           // For reminders/theme etc.
+  preferences   Json?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  userMeals     UserMeal[]      @relation(onDelete: Cascade)
-  moodLogs      MoodLog[]       @relation(onDelete: Cascade)
-  cravingSwaps  CravingSwaps[]  @relation(onDelete: Cascade)
+  userMeals     UserMeal[]
+  moodLogs      MoodLog[]
+  cravingSwaps  CravingSwaps[]
 }
 
 
