@@ -8,6 +8,7 @@ function Insights() {
   const [patternsData, setPatternsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [user, setUser] = useState(null);
   const [view, setView] = useState("week"); // week or month
 
   const navigate = useNavigate();
