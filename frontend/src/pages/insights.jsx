@@ -52,7 +52,7 @@ function Insights() {
         const cal = await calendarRes.json();
         const patt = await patternsRes.json();
 
-        setCalendarData(cal);
+        setCalendarData(cal.calendarData);
         setPatternsData(
           patt.sort((a, b) => b.count - a.count) // sort by frequency
         );
