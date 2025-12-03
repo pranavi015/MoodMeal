@@ -186,7 +186,7 @@ function Meals() {
                 className="bg-white rounded-3xl shadow-lg p-6 hover:shadow-xl transition-all"
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-gray-800 capitalize">{meal.mealType}</h2>
+                  <h2 className="text-xl font-bold text-gray-800 capitalize">{meal.foods}</h2>
                   <span className="text-3xl">{meal.moodAfter || '😐'}</span>
                 </div>
 
