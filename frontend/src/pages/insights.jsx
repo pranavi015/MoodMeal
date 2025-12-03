@@ -54,10 +54,10 @@ function Insights() {
 
         setCalendarData(cal.calendarData);
         setPatternsData(
-          patt.sort((a, b) => b.count - a.count) // sort by frequency
+          patt.sort((a, b) => b.count - a.count) 
         );
       } catch (err) {
-        setError("Failed to load insights. Please try again.");
+        setError(err.message);
       } finally {
         setLoading(false);
       }

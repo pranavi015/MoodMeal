@@ -24,78 +24,76 @@ const authenticateToken = (req, res, next) => {
 
 router.get('/mood-calendar', authenticateToken, async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    
-    let whereClause = { userId: req.user.userId };
+    const { view } = req.query; 
 
-    if (startDate && endDate) {
-      whereClause.timestamp = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
-      };
+    const now = new Date();
+    let startDate;
+
+    if (view === "week") {
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (view === "month") {
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
     const meals = await prisma.meal.findMany({
-      where: whereClause,
+      where: {
+        userId: req.user.userId,
+        ...(startDate && {
+          timestamp: { gte: startDate }
+        })
+      },
       include: {
         moods: {
-          select: {
-            timeContext: true,
-            intensity: true,
-            moodState: true,
-          }
+          select: { moodState: true, intensity: true }
         }
       },
-      orderBy: { timestamp: 'desc' }
+      orderBy: { timestamp: "desc" }
     });
-    
-    const calendarData = {};
+
+    const calendar = {};
+
     meals.forEach(meal => {
-      const date = meal.timestamp.toISOString().split('T')[0]; 
-      
-      if (!calendarData[date]) {
-        calendarData[date] = {
+      const date = meal.timestamp.toISOString().split("T")[0];
+
+      if (!calendar[date]) {
+        calendar[date] = {
           date,
-          meals: [],
-          moodIntensities: [] 
+          mealCount: 0,
+          moodScores: {} 
         };
       }
-      
-      calendarData[date].meals.push({
-          id: meal.id,
-          mealType: meal.mealType,
-          foods: meal.foods,
-          timestamp: meal.timestamp,
-          moods: meal.moods, 
-      });
-      
-      meal.moods.forEach(mood => {
-          if (mood.intensity) {
-              calendarData[date].moodIntensities.push(mood.intensity);
-          }
+
+      calendar[date].mealCount++;
+
+      meal.moods.forEach(m => {
+        if (!calendar[date].moodScores[m.moodState]) {
+          calendar[date].moodScores[m.moodState] = 0;
+        }
+        calendar[date].moodScores[m.moodState] += m.intensity || 0;
       });
     });
-    
-    const result = Object.values(calendarData).map(day => {
-        const totalIntensity = day.moodIntensities.reduce((sum, intensity) => sum + intensity, 0);
-        const avgMoodIntensity = day.moodIntensities.length > 0
-            ? (totalIntensity / day.moodIntensities.length).toFixed(2) 
-            : null;
-            
-        delete day.moodIntensities; 
-        
-        return {
-            ...day,
-            avgMoodIntensity: parseFloat(avgMoodIntensity) 
-        };
+
+   
+    const result = Object.values(calendar).map(day => {
+      
+      const mood = Object.entries(day.moodScores).sort(
+        (a, b) => b[1] - a[1]
+      )[0]?.[0] || "neutral";
+
+      return {
+        date: day.date,
+        mealCount: day.mealCount,
+        mood 
+      };
     });
-    
+
     res.json({ calendarData: result });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch calendar data' });
+    res.status(500).json({ error: "Failed to fetch calendar data" });
   }
 });
+
 
 router.post('/achievements', authenticateToken, async (req, res) => {
   const { satisfactionRating } = req.body;
