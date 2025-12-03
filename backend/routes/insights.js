@@ -24,7 +24,7 @@ const authenticateToken = (req, res, next) => {
 
 router.get('/mood-calendar', authenticateToken, async (req, res) => {
   try {
-    const { view } = req.query; 
+    const { view } = req.query.view; 
 
     const now = new Date();
     let startDate;
