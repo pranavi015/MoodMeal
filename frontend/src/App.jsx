@@ -6,6 +6,7 @@ import Swaps from './pages/swaps';
 import Profile from './pages/Profile';
 import Login from './pages/login';   
 import Signup from './pages/signup'; 
+import MealLogger from './pages/MealLogger'
 function App() {
   return (
     <Router>
@@ -18,6 +19,7 @@ function App() {
         <Route path="/insights" element={<Insights />} />
         <Route path="/swaps" element={<Swaps />} />
         <Route path="/Profile" element={<Profile />} />
+        <Route path="/meal-logger" element={<MealLogger />} />
       </Routes>
     </Router>
   );

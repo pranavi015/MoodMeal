@@ -33,7 +33,7 @@ model UserMeal {
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   mealType    String     // breakfast, lunch, dinner, snack
-  foods       String     @db.Text
+  foods       String      @db.Text
   photo       String?
   moodBefore  String?
   moodAfter   String?

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { Utensils, Plus, Edit, Trash2 } from 'lucide-react';
 import api from '../utils/api';
+import { Link } from "react-router-dom";
 
-const MEAL_TYPES = ['all', 'breakfast', 'lunch', 'dinner', 'snack'];
+
+const MEAL_TYPES = ['all', 'breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
 
 function Meals() {
   // State
@@ -11,7 +13,7 @@ function Meals() {
   const [loading, setLoading] = useState(true);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(6); 
+  const [limit] = useState(6);
   const [totalPages, setTotalPages] = useState(1);
 
   const [search, setSearch] = useState('');
@@ -23,14 +25,17 @@ function Meals() {
     const loadMeals = async () => {
       setLoading(true);
       try {
+        // Only send filterMealType if it's not "all"
         const params = {
           page,
           limit,
-          search: search || undefined,
+          search: search || "",
           sortBy,
           sortOrder,
-          filterMealType: filterMealType !== 'all' ? filterMealType : undefined,
         };
+        if (filterMealType && filterMealType !== "all") {
+          params.filterMealType = filterMealType;
+        }
 
         const query = new URLSearchParams(params).toString();
         const res = await api.get(`/meals?${query}`);
@@ -39,6 +44,8 @@ function Meals() {
         setTotalPages(res.data.pagination?.totalPages || 1);
       } catch (error) {
         console.error("Error fetching meals:", error);
+        setMeals([]);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }
@@ -46,6 +53,7 @@ function Meals() {
 
     loadMeals();
   }, [page, limit, search, sortBy, sortOrder, filterMealType]);
+
 
   // Handlers
   const handleSearchChange = (e) => {
@@ -73,7 +81,7 @@ function Meals() {
   };
 
   const paginationButtons = [];
-  for(let i = 1; i <= totalPages; i++) {
+  for (let i = 1; i <= totalPages; i++) {
     paginationButtons.push(
       <button
         key={i}
@@ -92,10 +100,14 @@ function Meals() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-extrabold text-gray-800">My Meals</h1>
-          <button className="flex items-center gap-2 px-6 py-3 bg-green-400 text-white rounded-xl font-bold hover:bg-green-500 transition-all">
+          <Link
+            to="/meal-logger"
+            className="flex items-center gap-2 px-6 py-3 bg-green-400 text-white rounded-xl font-bold hover:bg-green-500"
+          >
             <Plus className="w-5 h-5" />
             Log New Meal
-          </button>
+          </Link>
+
         </div>
 
         {/* Controls */}
@@ -129,9 +141,8 @@ function Meals() {
               <button
                 key={type}
                 onClick={() => handleFilterClick(type)}
-                className={`px-4 py-2 rounded font-semibold ${
-                  filterMealType === type ? 'bg-green-400 text-white' : 'bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded font-semibold ${filterMealType === type ? 'bg-green-400 text-white' : 'bg-gray-200'
+                  }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
@@ -154,8 +165,14 @@ function Meals() {
             <p className="text-gray-600 mb-8">
               Start tracking your meals to see insights about your eating habits!
             </p>
-            <button className="px-8 py-4 bg-green-400 text-white rounded-xl font-bold text-lg hover:bg-green-500 transition-all">
-              Log Your First Meal
+            <button>
+              <Link
+                to="/meal-logger"
+                className="flex items-center gap-2 px-6 py-3 bg-green-400 text-white rounded-xl font-bold hover:bg-green-500"
+              >
+                <Plus className="w-5 h-5" />
+                Log New Meal
+              </Link>
             </button>
           </div>
         )}
@@ -184,19 +201,28 @@ function Meals() {
                 {meal.notes && <p className="text-gray-600 mb-4">{meal.notes}</p>}
 
                 <p className="text-sm text-gray-400 mb-4">
-                  {new Date(meal.timestamp).toLocaleString()}
+                  {meal.timestamp ? new Date(meal.timestamp).toLocaleString() : "No timestamp"}
                 </p>
 
                 {/* Edit/Delete Buttons */}
                 <div className="flex gap-4">
-                  <button className="flex items-center gap-2 text-blue-600 hover:underline">
+                  <button
+                    className="flex items-center gap-2 text-blue-600 hover:underline"
+                    onClick={() => navigate(`/meal-logger/${meal.id}`)}
+                  >
                     <Edit className="w-4 h-4" />
                     Edit
                   </button>
-                  <button className="flex items-center gap-2 text-red-600 hover:underline">
+
+
+                  <button
+                    className="flex items-center gap-2 text-red-600 hover:underline"
+                    onClick={() => handleDelete(meal.id)}
+                  >
                     <Trash2 className="w-4 h-4" />
                     Delete
                   </button>
+
                 </div>
               </div>
             ))}
@@ -232,3 +258,212 @@ function Meals() {
 }
 
 export default Meals;
+
+// import { useEffect, useState } from "react";
+// import { Link } from "react-router-dom";
+// import axios from "axios";
+
+// export default function Meals() {
+//   const [meals, setMeals] = useState([]);
+//   const [page, setPage] = useState(1);
+//   const [totalPages, setTotalPages] = useState(1);
+
+//   const [search, setSearch] = useState("");
+//   const [sort, setSort] = useState("newest");
+//   const [filter, setFilter] = useState("all");
+
+//   const [loading, setLoading] = useState(false);
+
+//   const token = localStorage.getItem("token");
+
+//   // -----------------------------
+//   // Fetch Meals
+//   // -----------------------------
+//   const fetchMeals = async () => {
+//     try {
+//       setLoading(true);
+
+//       const res = await axios.get(`/api/meals`, {
+//         params: {
+//           page,
+//           search,
+//           sort,
+//           filter,
+//         },
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       setMeals(res.data.meals);
+//       setTotalPages(res.data.totalPages);
+//     } catch (err) {
+//       console.error("Error fetching meals:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchMeals();
+//   }, [page, search, sort, filter]);
+
+//   // -----------------------------
+//   // Delete Meal
+//   // -----------------------------
+//   const handleDelete = async (id) => {
+//     if (!confirm("Delete this meal?")) return;
+
+//     try {
+//       await axios.delete(`/api/meals/${id}`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       fetchMeals(); // refresh
+//     } catch (err) {
+//       console.error("Error deleting meal:", err);
+//     }
+//   };
+
+//   // -----------------------------
+//   // UI Starts Here
+//   // -----------------------------
+//   return (
+//     <div className="p-6 space-y-6">
+//       {/* Page Header */}
+//       <div className="flex justify-between items-center">
+//         <h1 className="text-3xl font-bold">Meals</h1>
+
+//         <Link
+//           to="/meal-logger"
+//           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+//         >
+//           Log New Meal
+//         </Link>
+//       </div>
+
+//       {/* Search + Sort + Filters */}
+//       <div className="flex flex-wrap gap-3 items-center">
+
+//         {/* Search */}
+//         <input
+//           type="text"
+//           placeholder="Search meals..."
+//           className="border p-2 rounded-lg w-64"
+//           value={search}
+//           onChange={(e) => {
+//             setPage(1);
+//             setSearch(e.target.value);
+//           }}
+//         />
+
+//         {/* Sort */}
+//         <select
+//           className="border p-2 rounded-lg"
+//           value={sort}
+//           onChange={(e) => setSort(e.target.value)}
+//         >
+//           <option value="newest">Newest First</option>
+//           <option value="oldest">Oldest First</option>
+//           <option value="mealType">Meal Type</option>
+//         </select>
+
+//         {/* Filters */}
+//         {["all", "breakfast", "lunch", "dinner", "snack"].map((f) => (
+//           <button
+//             key={f}
+//             onClick={() => {
+//               setFilter(f);
+//               setPage(1);
+//             }}
+//             className={`px-3 py-1 rounded-lg border ${
+//               filter === f ? "bg-blue-600 text-white" : "bg-gray-100"
+//             }`}
+//           >
+//             {f.charAt(0).toUpperCase() + f.slice(1)}
+//           </button>
+//         ))}
+//       </div>
+
+//       {/* Meals List */}
+//       {loading ? (
+//         <p>Loading...</p>
+//       ) : meals.length === 0 ? (
+//         <p className="text-gray-500">No meals found.</p>
+//       ) : (
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//           {meals.map((meal) => (
+//             <div
+//               key={meal.id}
+//               className="border p-4 rounded-xl shadow-sm bg-white"
+//             >
+//               <div className="flex justify-between">
+//                 <h3 className="text-xl font-semibold capitalize">
+//                   {meal.mealType}
+//                 </h3>
+//                 <p className="text-sm text-gray-500">
+//                   {new Date(meal.timestamp).toLocaleString()}
+//                 </p>
+//               </div>
+
+//               <p className="mt-2 text-gray-700">
+//                 <strong>Foods:</strong> {meal.foods.join(", ")}
+//               </p>
+
+//               <p className="text-gray-700">
+//                 <strong>Mood:</strong> {meal.mood}
+//               </p>
+
+//               {/* Edit + Delete */}
+//               <div className="flex gap-2 mt-4">
+//                 <Link
+//                   to={`/meals/edit/${meal.id}`}
+//                   className="px-3 py-1 bg-yellow-500 text-white rounded-lg"
+//                 >
+//                   Edit
+//                 </Link>
+
+//                 <button
+//                   onClick={() => handleDelete(meal.id)}
+//                   className="px-3 py-1 bg-red-600 text-white rounded-lg"
+//                 >
+//                   Delete
+//                 </button>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+
+//       {/* Pagination */}
+//       {totalPages > 1 && (
+//         <div className="flex gap-2 mt-6">
+//           <button
+//             disabled={page === 1}
+//             onClick={() => setPage((p) => p - 1)}
+//             className="px-3 py-1 border rounded disabled:opacity-50"
+//           >
+//             Prev
+//           </button>
+
+//           {[...Array(totalPages)].map((_, i) => (
+//             <button
+//               key={i}
+//               onClick={() => setPage(i + 1)}
+//               className={`px-3 py-1 border rounded ${
+//                 page === i + 1 ? "bg-blue-600 text-white" : ""
+//               }`}
+//             >
+//               {i + 1}
+//             </button>
+//           ))}
+
+//           <button
+//             disabled={page === totalPages}
+//             onClick={() => setPage((p) => p + 1)}
+//             className="px-3 py-1 border rounded disabled:opacity-50"
+//           >
+//             Next
+//           </button>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
