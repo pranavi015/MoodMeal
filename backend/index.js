@@ -11,10 +11,23 @@ const userRoutes = require('./routes/user');
 
 const app = express();
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://mood-meal-web.vercel.app"
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
-})); 
+}));
 app.use(express.json());
 
 

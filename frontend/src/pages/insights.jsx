@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { TrendingUp } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 function Insights() {
   const [calendarData, setCalendarData] = useState([]);
@@ -9,7 +10,11 @@ function Insights() {
   const [error, setError] = useState("");
   const [view, setView] = useState("week"); // week or month
 
+  const navigate = useNavigate();
+
   const token = localStorage.getItem("token");
+  
+
 
   // Mood emoji map
   const moodEmoji = {
@@ -29,6 +34,18 @@ function Insights() {
     energetic: "bg-yellow-200",
   };
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+
+    if (!token || !userData) {
+      navigate('/login');
+      return;
+    }
+
+    setUser(JSON.parse(userData));
+
+  }, [navigate]);
   // Fetch data whenever view changes
   useEffect(() => {
     async function fetchInsights() {
