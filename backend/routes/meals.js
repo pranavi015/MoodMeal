@@ -129,41 +129,17 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 //create new meal
-// router.post('/', authenticateToken, async (req, res) => {
-//     try {
-//         const { mealType, foods, photo, moodBefore, moodAfter, cravings, notes, timestamp } = req.body;
-
-//         // if (!mealType || typeof mealType !== 'string') {
-//         //     return res.status(400).json({ error: 'mealType is required and must be a string' });
-//         // }
-
-//         // if (!foods || (!Array.isArray(foods) && typeof foods !== 'string')) {
-//         //     return res.status(400).json({ error: 'foods must be a string or an array' });
-//         // }
-
-//         const meal = await prisma.userMeal.create({
-//             data: {
-//                 userId: req.user.userId,
-//                 mealType,
-//                 foods,
-//                 photo,
-//                 moodBefore,
-//                 moodAfter,
-//                 cravings,
-//                 notes,
-//                 timestamp: timestamp ? new Date(timestamp) : new Date()
-//             }
-//         });
-
-//         res.status(201).json(meal);
-//     } catch (error) {
-//         res.status(400).json({ error: 'Failed to create meal' });
-//     }
-// });
 router.post('/', authenticateToken, async (req, res) => {
-    console.log("Received payload:", req.body);
     try {
         const { mealType, foods, photo, moodBefore, moodAfter, cravings, notes, timestamp } = req.body;
+
+        // if (!mealType || typeof mealType !== 'string') {
+        //     return res.status(400).json({ error: 'mealType is required and must be a string' });
+        // }
+
+        // if (!foods || (!Array.isArray(foods) && typeof foods !== 'string')) {
+        //     return res.status(400).json({ error: 'foods must be a string or an array' });
+        // }
 
         const meal = await prisma.userMeal.create({
             data: {
@@ -181,10 +157,34 @@ router.post('/', authenticateToken, async (req, res) => {
 
         res.status(201).json(meal);
     } catch (error) {
-        console.error("Prisma create error:", error);
         res.status(400).json({ error: 'Failed to create meal' });
     }
 });
+// router.post('/', authenticateToken, async (req, res) => {
+//     console.log("Received payload:", req.body);
+//     try {
+//         const { mealType, foods, photo, moodBefore, moodAfter, cravings, notes, timestamp } = req.body;
+
+//         const meal = await prisma.userMeal.create({
+//             data: {
+//                 userId: req.user.userId,
+//                 mealType,
+//                 foods,
+//                 photo,
+//                 moodBefore,
+//                 moodAfter,
+//                 cravings,
+//                 notes,
+//                 timestamp: timestamp ? new Date(timestamp) : new Date()
+//             }
+//         });
+
+//         res.status(201).json(meal);
+//     } catch (error) {
+//         console.error("Prisma create error:", error);
+//         res.status(400).json({ error: 'Failed to create meal' });
+//     }
+// });
 
 
 //update meal
