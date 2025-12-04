@@ -6,9 +6,9 @@ import Layout from '../components/Layout';
 function Dashboard() {
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState({
-    mealsTracked: 0,
-    moodLogs: 0,
-    healthySwaps: 0
+    mealsTracked: null,
+    moodLogs: null,
+    healthySwaps: null
   });
   const navigate = useNavigate();
 

@@ -208,9 +208,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
             }
         });
 
-        // if (meal.count === 0) {
-        //     return res.status(404).json({ error: 'Meal not found' });
-        // }
+        if (meal.count === 0) {
+            return res.status(404).json({ error: 'Meal not found' });
+        }
 
         res.json({ message: 'Meal updated', meal });
     } catch (error) {
@@ -221,21 +221,23 @@ router.put('/:id', authenticateToken, async (req, res) => {
 //delete meal
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
-        const meal = await prisma.userMeal.delete({
-            where: {
-                id_userId: parseInt(req.params.id),
-                userId: req.user.userId
-            }
-        });
-
-        // if (meal.count === 0) {
-        //     return res.status(404).json({ error: 'Meal not found' });
-        // }
-
-        res.json({ message: 'Meal deleted' });
+      const result = await prisma.userMeal.deleteMany({
+        where: {
+          id: parseInt(req.params.id),
+          userId: req.user.userId
+        }
+      });
+  
+      if (result.count === 0) {
+        return res.status(404).json({ error: "Meal not found" });
+      }
+  
+      res.json({ message: "Meal deleted" });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to delete meal' });
+      console.error("DELETE ERROR:", error);
+      res.status(500).json({ error: "Failed to delete meal" });
     }
-});
+  });
+  
 
 module.exports = router;

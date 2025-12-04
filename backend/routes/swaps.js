@@ -23,8 +23,6 @@ const swapDatabase = {
   soda: ['Fresh Lime Juice', 'Lemon-mint infused water'],
 };
 
-
-
 router.get('/search', authenticateToken, (req, res) => {
   const { food } = req.query;
 

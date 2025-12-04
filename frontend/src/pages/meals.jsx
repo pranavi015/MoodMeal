@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { Utensils, Plus, Edit, Trash2 } from 'lucide-react';
 import api from '../utils/api';
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 const MEAL_TYPES = ['all', 'breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
@@ -20,6 +21,7 @@ function Meals() {
   const [sortBy, setSortBy] = useState('timestamp');
   const [sortOrder, setSortOrder] = useState('desc');
   const [filterMealType, setFilterMealType] = useState('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadMeals = async () => {
@@ -82,31 +84,18 @@ function Meals() {
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this meal?")) return;
-  
-    const token = localStorage.getItem("token");
-  
+
     try {
-      const res = await fetch(`${API_URL}/api/meals/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-  
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || "Failed to delete meal.");
-        return;
-      }
-  
-      fetchMeals(); 
-  
+      await api.delete(`/api/meals/${id}`);
+
+      // update local state so UI refreshes without reloading
+      setMeals((prev) => prev.filter((m) => m.id !== id));
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Network error. Please try again.");
+      alert("Failed to delete meal.");
     }
   };
-  
+
 
   const paginationButtons = [];
   for (let i = 1; i <= totalPages; i++) {
@@ -241,6 +230,7 @@ function Meals() {
                     <Edit className="w-4 h-4" />
                     Edit
                   </button>
+
 
 
                   <button

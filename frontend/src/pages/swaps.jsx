@@ -10,6 +10,7 @@ export default function Swaps() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -19,7 +20,7 @@ export default function Swaps() {
     description: ''
   });
 
-  const navigate = useNavigate();
+
   const API_URL = import.meta.env.VITE_BACKEND_URL;
 
   // Fetch user's custom swaps on load
@@ -44,7 +45,7 @@ export default function Swaps() {
         setCustomSwaps(data.swaps || []);
       }
     } catch (err) {
-      console.error('Error fetching custom swaps:', err);
+      console.error('Error fetching custom swaps:', err.message);
     }
   };
 
@@ -345,11 +346,8 @@ export default function Swaps() {
               ))}
             </div>
           ) : (
-            <div className="mb-8">
-              
             <div className="bg-white p-8 rounded-lg shadow-md text-center">
               <p className="text-gray-500">No custom swaps yet. Create your first one!</p>
-            </div>
             </div>
           )}
         </div>

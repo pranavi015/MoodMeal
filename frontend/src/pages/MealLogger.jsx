@@ -10,7 +10,7 @@ export default function MealLogger() {
 
     const [mealType, setMealType] = useState("breakfast");
     const [foods, setFoods] = useState("");
-    const [moodAfter, setMoodAfter] = useState("😐");
+    const [moodAfter, setMoodAfter] = useState("😀");
     const [notes, setNotes] = useState("");
     const [photo, setPhoto] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -113,12 +113,12 @@ export default function MealLogger() {
                             onChange={(e) => setMoodAfter(e.target.value)}
                             className="w-full border rounded px-4 py-2 mt-2"
                         >
-                            <option>happy</option>
-                            <option>light</option>
-                            <option>satisfied</option>
-                            <option>heavy</option>
-                            <option>bloated</option>
-                            <option>unsure</option>
+                            <option>happy😊</option>
+                            <option>light😃</option>
+                            <option>satisfied😌</option>
+                            <option>heavy😐</option>
+                            <option>bloated😓</option>
+                            <option>unsure🤔</option>
 
                         </select>
                     </div>
