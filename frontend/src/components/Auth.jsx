@@ -6,7 +6,7 @@ import { Leaf, CheckCircle, AlertTriangle } from 'lucide-react';
 function AuthForm({ mode }) {
   const navigate = useNavigate();
   const isSignup = mode === "signup";
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_BACKEND_URL;
 
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [message, setMessage] = useState({ text: '', type: '' });

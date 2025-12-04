@@ -3,23 +3,25 @@ const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 
 const router = express.Router();
-const prisma = new PrismaClient
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+const prisma = new PrismaClient()
+const { authenticateToken } = require('../middleware/authMid');
 
-  if (!token) {
-    return res.status(401).json({ error: 'Access denied' });
-  }
+// const authenticateToken = (req, res, next) => {
+//   const authHeader = req.headers['authorization'];
+//   const token = authHeader && authHeader.split(' ')[1];
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid token' });
-    }
-    req.user = user; 
-    next();
-  });
-};
+//   if (!token) {
+//     return res.status(401).json({ error: 'Access denied' });
+//   }
+
+//   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+//     if (err) {
+//       return res.status(403).json({ error: 'Invalid token' });
+//     }
+//     req.user = user; 
+//     next();
+//   });
+// };
 
 router.get('/mood-calendar', authenticateToken, async (req, res) => {
   try {

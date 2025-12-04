@@ -9,15 +9,14 @@ function Insights() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
-  const [view, setView] = useState("week"); // week or month
+  const [view, setView] = useState("week");
 
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
-  
 
+  const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
-  // Mood emoji map
   const moodEmoji = {
     happy: "😊",
     neutral: "😐",
@@ -26,7 +25,6 @@ function Insights() {
     energetic: "⚡",
   };
 
-  // Background colors per mood
   const moodColors = {
     happy: "bg-green-200",
     neutral: "bg-gray-200",
@@ -45,9 +43,8 @@ function Insights() {
     }
 
     setUser(JSON.parse(userData));
-
   }, [navigate]);
-  // Fetch data whenever view changes
+
   useEffect(() => {
     async function fetchInsights() {
       setLoading(true);
@@ -55,34 +52,50 @@ function Insights() {
 
       try {
         const [calendarRes, patternsRes] = await Promise.all([
-          fetch(`/api/insights/mood-calendar?view=${view}`, {
-            headers: { Authorization: `Bearer ${token}` },
+          fetch(`${API_URL}/api/insights/mood-calendar?view=${view}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
           }),
-          fetch(`/api/insights/patterns`, {
-            headers: { Authorization: `Bearer ${token}` },
+          fetch(`${API_URL}/api/insights/patterns`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
           }),
         ]);
 
         if (!calendarRes.ok || !patternsRes.ok) {
-          throw new Error("API error");
+          const calendarText = await calendarRes.text();
+          const patternsText = await patternsRes.text();
+
+          console.error('Calendar response:', calendarText);
+          console.error('Patterns response:', patternsText);
+
+          throw new Error(`API Error - Calendar: ${calendarRes.status}, Patterns: ${patternsRes.status}`);
         }
 
         const cal = await calendarRes.json();
         const patt = await patternsRes.json();
 
-        setCalendarData(cal.calendarData);
+        setCalendarData(cal.calendarData || []);
         setPatternsData(
-          patt.sort((a, b) => b.count - a.count) 
+          (patt.topMoodBoostingFoods || []).sort((a, b) => b.count - a.count)
         );
+
       } catch (err) {
-        setError(err.message);
+        console.error("Fetch error:", err);
+        setError(err.message || "Failed to load insights");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchInsights();
-  }, [view, token]);
+    if (token) {
+      fetchInsights();
+    }
+  }, [view, token, API_URL]);
 
   return (
     <Layout>
@@ -91,7 +104,6 @@ function Insights() {
           Insights & Analytics
         </h1>
 
-        {/* Loading */}
         {loading && (
           <div className="bg-white rounded-3xl shadow-lg p-12 text-center">
             <TrendingUp className="w-20 h-20 mx-auto text-gray-300 mb-6 animate-spin" />
@@ -99,16 +111,15 @@ function Insights() {
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-xl mb-6">
-            {error}
+            <p className="font-semibold">Error loading insights:</p>
+            <p className="text-sm mt-1">{error}</p>
           </div>
         )}
 
         {!loading && !error && (
           <>
-            {/* View Toggle */}
             <div className="flex justify-end mb-6">
               <div className="flex gap-2 bg-white shadow rounded-full px-4 py-2">
                 {["week", "month"].map((v) => (
@@ -116,10 +127,9 @@ function Insights() {
                     key={v}
                     onClick={() => setView(v)}
                     className={`px-4 py-1 rounded-full text-sm font-medium transition 
-                      ${
-                        view === v
-                          ? "bg-gray-800 text-white"
-                          : "text-gray-600 hover:bg-gray-100"
+                      ${view === v
+                        ? "bg-gray-800 text-white"
+                        : "text-gray-600 hover:bg-gray-100"
                       }`}
                   >
                     {v === "week" ? "Week View" : "Month View"}
@@ -134,24 +144,27 @@ function Insights() {
                 Mood Calendar
               </h2>
 
-              <div className="grid grid-cols-7 gap-3">
-                {calendarData.map((item, index) => (
-                  <div
-                    key={index}
-                    className={`p-3 rounded-xl shadow-sm text-center hover:scale-105 transition cursor-pointer ${
-                      moodColors[item.mood] || "bg-gray-100"
-                    }`}
-                  >
-                    <p className="text-sm text-gray-700 font-semibold">
-                      {new Date(item.date).getDate()}
-                    </p>
-                    <p className="text-2xl">{moodEmoji[item.mood] || "🙂"}</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {item.mealCount} meals
-                    </p>
-                  </div>
-                ))}
-              </div>
+              {calendarData.length === 0 ? (
+                <p className="text-gray-600">No mood data available yet. Start logging meals!</p>
+              ) : (
+                <div className="grid grid-cols-7 gap-3">
+                  {calendarData.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-xl shadow-sm text-center hover:scale-105 transition cursor-pointer ${moodColors[item.mood] || "bg-gray-100"
+                        }`}
+                    >
+                      <p className="text-sm text-gray-700 font-semibold">
+                        {new Date(item.date).getDate()}
+                      </p>
+                      <p className="text-2xl">{moodEmoji[item.mood] || "🙂"}</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {item.mealCount} meals
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Patterns Section */}
@@ -161,7 +174,7 @@ function Insights() {
               </h2>
 
               {patternsData.length === 0 ? (
-                <p className="text-gray-600">No patterns detected yet.</p>
+                <p className="text-gray-600">No patterns detected yet. Keep logging meals to discover patterns!</p>
               ) : (
                 <ul className="space-y-4">
                   {patternsData.map((p, index) => (
@@ -172,12 +185,19 @@ function Insights() {
                       <span className="text-lg font-medium text-gray-800">
                         {p.food}
                       </span>
-                      <span className="text-xl">
-                        →
-                        <span className="ml-2">
-                          {moodEmoji[p.mood] || "🙂"} {p.mood}
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 font-semibold">
+                          ↑ {p.moodImprovement}
                         </span>
-                      </span>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-red-600 font-semibold">
+                          ↓ {p.moodDecline}
+                        </span>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-gray-600">
+                          = {p.moodStable}
+                        </span>
+                      </div>
                       <span className="text-sm text-gray-500">
                         {p.count} times
                       </span>

@@ -2,129 +2,219 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
+const { authenticateToken } = require('../middleware/authMid');
 
-const swapDatabase = {
-    pizza: ['Cauliflower crust pizza', 'Veggie-loaded pizza', 'Whole-grain pita pizza'],
-    chocolate: ['Dark chocolate (70%+ cocoa)', 'Chocolate protein shake', 'Cocoa energy bites'],
-    chips: ['Baked veggie chips', 'Air-popped popcorn', 'Roasted chickpeas'],
-    soda: ['Sparkling water with fruit', 'Kombucha', 'Iced green tea'],
-    icecream: ['Greek yogurt with berries', 'Banana nice cream', 'Frozen yogurt bar'],
-    burger: ['Grilled chicken burger', 'Black bean burger', 'Turkey burger'],
-    fries: ['Baked sweet potato fries', 'Zucchini fries', 'Carrot sticks with hummus'],
-    candy: ['Dried fruit', 'Trail mix with nuts', 'Yogurt-covered raisins'],
-    cookies: ['Oatmeal cookies', 'Protein cookies', 'Rice cakes with almond butter'],
-    cake: ['Banana bread', 'Greek yogurt parfait', 'Mini protein muffins'],
-    pasta: ['Zucchini noodles', 'Chickpea pasta', 'Whole-wheat pasta'],
-    donut: ['Baked donut', 'Whole-grain muffin', 'Apple slices with peanut butter'],
-    coffee: ['Iced latte with almond milk', 'Matcha latte', 'Black coffee with cinnamon'],
-    beer: ['Low-calorie beer', 'Sparkling water with lime', 'Kombucha mocktail'],
-    wine: ['Red wine (small pour)', 'Sparkling water with berries', 'Grape juice spritzer'],
-  };
-  
 const prisma = new PrismaClient();
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Access denied. Token missing.' });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid token.' });
-    req.user = user;
-    next();
-  });
-}
+// Predefined swap database
+const swapDatabase = {
+  pizza: ['Whole-wheat roti pizza with veggies', 'Paneer tikka open toast', 'Tandoori mushroom open sandwich'],
+  chocolate: ['Ragi (finger millet) cocoa ladoo', 'Date & cacao balls (khajoor bites)', 'Jaggery dark chocolate bark', 'Almond-cocoa chikki'],
+  chips: ['Baked veggie chips', 'Air-popped popcorn', 'Roasted chickpeas'],
+  icecream: ['Kulfi made with almond milk', 'Frozen mango shrikhand', 'Greek yogurt with berries', 'Frozen yogurt bar'],
+  burger: ['Grilled chicken burger', 'Spicy tofu burger', 'Quinoa veggie burger'],
+  fries: ['Baked masala banana chips', 'Baked sweet potato fries', 'Zucchini fries', 'Carrot sticks with hummus'],
+  candy: ['Dried fruit', 'Trail mix with nuts', 'Yogurt-covered raisins'],
+  cookies: ['Oatmeal cookies', 'Protein cookies', 'Rice cakes with almond butter'],
+  cake: ['Banana bread', 'Greek yogurt parfait', 'Mini protein muffins'],
+  pasta: ['Zucchini noodles', 'Chickpea pasta', 'Whole-wheat pasta'],
+  donut: ['Baked donut', 'Whole-grain muffin', 'Apple slices with peanut butter'],
+  coffee: ['Iced latte with almond milk', 'Matcha latte', 'Black coffee with cinnamon'],
+  soda: ['Fresh Lime Juice', 'Lemon-mint infused water'],
+};
 
-router.post('/suggestions', authenticateToken, async (req, res) => {
-  const { craving } = req.body;
-  if (!craving) return res.status(400).json({ error: 'Craving is required.' });
 
-  try {
-    const cravingKey = craving.toLowerCase().replace(/\s+/g, '');
-    const suggestions = swapDatabase[cravingKey];
+// ============================================
+// SEARCH - Get swap suggestions from database
+// ============================================
+router.get('/search', authenticateToken, (req, res) => {
+  const { food } = req.query;
 
-    if (suggestions) {
-      return res.json({
-        craving,
-        suggestions: suggestions.slice(0, 3),
-      });
-    } else {
-      const funFallbacks = [
-        "Let's get creative! Try making a fun healthy twist on your craving.",
-        "Explore new flavors — mix something crunchy, creamy, or fruity!",
-        "Satisfy your craving with something fresh, colorful, and delicious.",
-      ];
-
-      return res.json({
-        craving,
-        suggestions: funFallbacks,
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to get swap suggestions.' });
+  if (!food) {
+    return res.status(400).json({ error: 'Food item is required' });
   }
+
+  // Normalize search (lowercase, remove spaces)
+  const searchTerm = food.toLowerCase().replace(/\s+/g, '');
+
+  // Find matching food in swap database
+  const matchedKey = Object.keys(swapDatabase).find(key =>
+    searchTerm.includes(key) || key.includes(searchTerm)
+  );
+
+  if (matchedKey) {
+    const suggestions = swapDatabase[matchedKey].map((alternative, index) => ({
+      id: `preset_${matchedKey}_${index}`,
+      originalFood: food,
+      healthyAlternative: alternative,
+      isPreset: true
+    }));
+
+    return res.json({
+      success: true,
+      found: true,
+      originalFood: food,
+      suggestions
+    });
+  }
+
+  res.json({
+    success: true,
+    found: false,
+    message: 'No preset swaps found. You can create your own!'
+  });
 });
 
-router.post('/accept', authenticateToken, async (req, res) => {
-  const { originalCraving, suggestedSwap, cravingType } = req.body;
-  if (!originalCraving || !suggestedSwap) {
-    return res.status(400).json({ error: 'originalCraving and suggestedSwap are required.' });
+// ============================================
+// CREATE - Add custom swap
+// ============================================
+router.post('/', authenticateToken, async (req, res) => {
+  const { originalFood, healthyAlternative, description } = req.body;
+
+  if (!originalFood || !healthyAlternative) {
+    return res.status(400).json({
+      error: 'Original food and healthy alternative are required'
+    });
   }
+
   try {
     const swap = await prisma.cravingSwaps.create({
       data: {
-        userId: req.user.userId,
-        originalItem: originalCraving,
-        suggestedSwap,
-        accepted: true,
-        cravingType: cravingType || 'General', 
-      },
+        userId: req.user.id,
+        originalFood,
+        healthyAlternative,
+        description: description || null
+      }
     });
 
-    res.json({ message: 'Swap accepted successfully.', swap });
+    res.status(201).json({
+      success: true,
+      message: 'Custom swap created successfully',
+      swap
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to save swap.' });
+    console.error('Error creating swap:', error);
+    res.status(500).json({ error: 'Failed to create swap' });
   }
 });
 
-  
-router.put('/:id/rate', authenticateToken, async (req, res) => {
-    const { id } = req.params;
-    const { rating } = req.body;
-  
-    if (!rating || rating < 1 || rating > 5)
-      return res.status(400).json({ error: 'Rating must be between 1 and 5.' });
-  
-    try {
-      const updatedSwap = await prisma.cravingSwaps.update({
-        where: { id: parseInt(id) },
-        data: {
-          satisfactionRating: rating,
-          completedAt: new Date(),
-        },
-      });
-  
-      res.json({ message: 'Swap rated successfully.', updatedSwap });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Failed to rate swap.' });
-    }
-  });
-  
+// ============================================
+// READ - Get all user's custom swaps
+// ============================================
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const swaps = await prisma.cravingSwaps.findMany({
+      where: { userId: req.user.id },
+      orderBy: { createdAt: 'desc' }
+    });
 
-router.get('/history', authenticateToken, async (req, res) => {
-    try {
-      const history = await prisma.cravingSwaps.findMany({
-        where: { userId: req.user.userId },
-        orderBy: { createdAt: 'desc' },
-      });
-  
-      res.json(history);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Failed to fetch swap history.' });
+    res.json({
+      success: true,
+      swaps
+    });
+  } catch (error) {
+    console.error('Error fetching swaps:', error);
+    res.status(500).json({ error: 'Failed to fetch swaps' });
+  }
+});
+
+// ============================================
+// READ - Get single swap by ID
+// ============================================
+router.get('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const swap = await prisma.cravingSwaps.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!swap) {
+      return res.status(404).json({ error: 'Swap not found' });
     }
-  });
+
+    if (swap.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    res.json({ success: true, swap });
+  } catch (error) {
+    console.error('Error fetching swap:', error);
+    res.status(500).json({ error: 'Failed to fetch swap' });
+  }
+});
+
+// ============================================
+// UPDATE - Edit custom swap
+// ============================================
+router.put('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { originalFood, healthyAlternative, description } = req.body;
+
+  try {
+    const existingSwap = await prisma.cravingSwaps.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!existingSwap) {
+      return res.status(404).json({ error: 'Swap not found' });
+    }
+
+    if (existingSwap.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const updatedSwap = await prisma.cravingSwaps.update({
+      where: { id: parseInt(id) },
+      data: {
+        originalFood,
+        healthyAlternative,
+        description
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Swap updated successfully',
+      swap: updatedSwap
+    });
+  } catch (error) {
+    console.error('Error updating swap:', error);
+    res.status(500).json({ error: 'Failed to update swap' });
+  }
+});
+
+// ============================================
+// DELETE - Remove custom swap
+// ============================================
+router.delete('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const swap = await prisma.cravingSwaps.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!swap) {
+      return res.status(404).json({ error: 'Swap not found' });
+    }
+
+    if (swap.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    await prisma.cravingSwaps.delete({
+      where: { id: parseInt(id) }
+    });
+
+    res.json({
+      success: true,
+      message: 'Swap deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting swap:', error);
+    res.status(500).json({ error: 'Failed to delete swap' });
+  }
+});
 
 module.exports = router;

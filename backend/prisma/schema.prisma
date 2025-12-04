@@ -75,17 +75,17 @@ model MoodLog {
 }
 
 model CravingSwaps {
-  id                 Int       @id @default(autoincrement())
-  userId             Int
-  user               User      @relation(fields: [userId], references: [id])
-
-  cravingType        String
-  originalItem       String    @db.Text
-  suggestedSwap      String?   @db.Text
-  accepted           Boolean   @default(false)
-  satisfactionRating Int?
-  createdAt          DateTime  @default(now())
-  completedAt        DateTime?
-
+  id                  Int      @id @default(autoincrement())
+  userId              Int
+  originalFood        String
+  healthyAlternative  String
+  cravingType         String   // sweet, salty, crunchy, savory
+  description         String?
+  satisfactionRating  Int?     // 1-5 stars
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   @@index([userId])
 }

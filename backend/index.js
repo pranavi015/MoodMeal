@@ -13,7 +13,9 @@ const app = express();
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  "https://mood-meal-web.vercel.app"
+  "https://mood-meal-web.vercel.app",
+  "http://localhost:5173"
+
 ];
 
 app.use(cors({

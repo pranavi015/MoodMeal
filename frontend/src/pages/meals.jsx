@@ -38,7 +38,7 @@ function Meals() {
         }
 
         const query = new URLSearchParams(params).toString();
-        const res = await api.get(`/meals?${query}`);
+        const res = await api.get(`api/meals?${query}`);
 
         setMeals(res.data.meals || []);
         setTotalPages(res.data.pagination?.totalPages || 1);
@@ -79,6 +79,35 @@ function Meals() {
   const goToPage = (pageNum) => {
     setPage(pageNum);
   };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this meal?")) return;
+  
+    const token = localStorage.getItem("token");
+  
+    try {
+      const res = await fetch(`${API_URL}/api/meals/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+  
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Failed to delete meal.");
+        return;
+      }
+  
+      // Refresh your meal list after deletion
+      fetchMeals(); // <-- Make sure you have this function in your component
+  
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Network error. Please try again.");
+    }
+  };
+  
 
   const paginationButtons = [];
   for (let i = 1; i <= totalPages; i++) {
@@ -187,7 +216,7 @@ function Meals() {
               >
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold text-gray-800 capitalize">{meal.foods}</h2>
-                  <span className="text-3xl">{meal.moodAfter || '😐'}</span>
+                  <span className="text-3xl">{meal.moodAfter || 'unsure'}</span>
                 </div>
 
                 {meal.photo && (
@@ -197,7 +226,7 @@ function Meals() {
                     className="w-full h-40 object-cover rounded-xl mb-4"
                   />
                 )}
-
+                {meal.mealType && <p className="text-l font-bold text-gray-600 capitalize">{meal.mealType}</p>}
                 {meal.notes && <p className="text-gray-600 mb-4">{meal.notes}</p>}
 
                 <p className="text-sm text-gray-400 mb-4">

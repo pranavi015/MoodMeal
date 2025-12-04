@@ -1,26 +1,27 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
+const { authenticateToken } = require('../middleware/authMid');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+// const authenticateToken = (req, res, next) => {
+//     const authHeader = req.headers['authorization'];
+//     const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token) {
-        return res.status(401).json({ error: 'Access denied' });
-    }
+//     if (!token) {
+//         return res.status(401).json({ error: 'Access denied' });
+//     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid token' });
-        }
-        req.user = user;
-        next();
-    });
-};
+//     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+//         if (err) {
+//             return res.status(403).json({ error: 'Invalid token' });
+//         }
+//         req.user = user;
+//         next();
+//     });
+// };
 
 router.get('/', authenticateToken, async (req, res) => {
     try {
