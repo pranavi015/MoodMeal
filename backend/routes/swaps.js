@@ -6,7 +6,7 @@ const { authenticateToken } = require('../middleware/authMid');
 
 const prisma = new PrismaClient();
 
-// Predefined swap database
+//swap database
 const swapDatabase = {
   pizza: ['Whole-wheat roti pizza with veggies', 'Paneer tikka open toast', 'Tandoori mushroom open sandwich'],
   chocolate: ['Ragi (finger millet) cocoa ladoo', 'Date & cacao balls (khajoor bites)', 'Jaggery dark chocolate bark', 'Almond-cocoa chikki'],
@@ -24,9 +24,7 @@ const swapDatabase = {
 };
 
 
-// ============================================
-// SEARCH - Get swap suggestions from database
-// ============================================
+
 router.get('/search', authenticateToken, (req, res) => {
   const { food } = req.query;
 
@@ -34,10 +32,10 @@ router.get('/search', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'Food item is required' });
   }
 
-  // Normalize search (lowercase, remove spaces)
+
   const searchTerm = food.toLowerCase().replace(/\s+/g, '');
 
-  // Find matching food in swap database
+  // find match logic
   const matchedKey = Object.keys(swapDatabase).find(key =>
     searchTerm.includes(key) || key.includes(searchTerm)
   );
@@ -65,9 +63,7 @@ router.get('/search', authenticateToken, (req, res) => {
   });
 });
 
-// ============================================
-// CREATE - Add custom swap
-// ============================================
+//create
 router.post('/', authenticateToken, async (req, res) => {
   const { originalFood, healthyAlternative, description } = req.body;
 
@@ -98,9 +94,7 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// ============================================
-// READ - Get all user's custom swaps
-// ============================================
+//read
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const swaps = await prisma.cravingSwaps.findMany({
@@ -118,9 +112,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// ============================================
-// READ - Get single swap by ID
-// ============================================
+//read
 router.get('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
@@ -144,9 +136,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ============================================
-// UPDATE - Edit custom swap
-// ============================================
+//update
 router.put('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { originalFood, healthyAlternative, description } = req.body;
@@ -184,9 +174,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ============================================
-// DELETE - Remove custom swap
-// ============================================
+//delete
 router.delete('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 

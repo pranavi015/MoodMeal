@@ -135,8 +135,7 @@ router.get('/patterns', authenticateToken, async (req, res) => {
     const foodMoodMap = {};
 
     meals.forEach(meal => {
-      // Since you store moodBefore and moodAfter as strings in the meal,
-      // we'll use those if available, otherwise try to derive from moodLogs
+      // mood derived from moodLogs
       
       if (!meal.foods) return;
 
@@ -145,17 +144,17 @@ router.get('/patterns', authenticateToken, async (req, res) => {
         .map(f => f.trim().toLowerCase())
         .filter(f => f.length > 0);
 
-      // Get mood change - you can use moodBefore/moodAfter from the meal
-      // or calculate from moodLogs timestamps
+
+      // mood change or calculating from moodLogs timestamps
       let moodImproved = false;
       let moodDeclined = false;
       
       if (meal.moodBefore && meal.moodAfter) {
-        // Simple string comparison - you might want to map these to intensity values
+        // string comparison for intensity values
         moodImproved = meal.moodAfter === 'happy' || meal.moodAfter === 'energetic';
         moodDeclined = meal.moodAfter === 'sad' || meal.moodAfter === 'stressed';
       } else if (meal.moodLogs.length >= 2) {
-        // Sort by timestamp to get before/after
+        // sort by timestamp
         const sortedLogs = [...meal.moodLogs].sort((a, b) => 
           new Date(a.timestamp) - new Date(b.timestamp)
         );
@@ -226,7 +225,7 @@ router.get('/achievements', authenticateToken, async (req, res) => {
       });
     }
 
-    // Calculate streak
+    //streak
     let streak = 1;
     let maxStreak = 1;
     for (let i = 1; i < meals.length; i++) {
@@ -240,7 +239,7 @@ router.get('/achievements', authenticateToken, async (req, res) => {
       }
     }
 
-    // Calculate balanced days
+    //balanced days
     const balancedDays = {};
     meals.forEach(meal => {
       const date = meal.timestamp.toISOString().split('T')[0];
@@ -255,7 +254,7 @@ router.get('/achievements', authenticateToken, async (req, res) => {
         });
       }
 
-      // Check if mood improved or stayed good
+      // mood improved or not
       if (meal.moodAfter && (meal.moodAfter === 'happy' || meal.moodAfter === 'energetic')) {
         balancedDays[date].moodGood = true;
       } else if (meal.moodLogs.length >= 2) {
@@ -273,7 +272,7 @@ router.get('/achievements', authenticateToken, async (req, res) => {
     const balancedDayCount = Object.values(balancedDays)
       .filter(d => d.moodGood && d.foods.size >= 3).length;
 
-    // Calculate new foods tried
+    //no. of foods tried
     const seenFoods = new Set();
     const newFoods = [];
     meals.forEach(meal => {

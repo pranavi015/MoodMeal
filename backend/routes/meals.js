@@ -25,7 +25,6 @@ const prisma = new PrismaClient();
 
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        // Extract query params with defaults
         const {
             page = 1,
             limit = 10,
@@ -42,13 +41,12 @@ router.get('/', authenticateToken, async (req, res) => {
         const skip = (pageNumber - 1) * pageSize;
         const take = pageSize;
 
-        // Build WHERE clause
         const where = {
             userId: req.user.userId,
             AND: []
         };
 
-        // Search text in foods field
+        //search
         if (search) {
             where.AND.push({
               foods: { has: search }
@@ -57,28 +55,27 @@ router.get('/', authenticateToken, async (req, res) => {
           
           
 
-        // Filter by meal type
+        // filter 
         if (filterMealType) {
             where.AND.push({
                 mealType: filterMealType
             });
         }
 
-        // Filter by moodAfter
+        // filter
         if (filterMood) {
             where.AND.push({
                 moodAfter: filterMood
             });
         }
 
-        // Sorting options
+        // sorting options
         const validSortFields = ['timestamp', 'mealType'];
         const sortField = validSortFields.includes(sortBy) ? sortBy : 'timestamp';
 
         const validSortOrder = ['asc', 'desc'];
         const order = validSortOrder.includes(sortOrder) ? sortOrder : 'desc';
 
-        // Query meals
         const [meals, total] = await Promise.all([
             prisma.userMeal.findMany({
                 where,

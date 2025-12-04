@@ -6,7 +6,6 @@ const { authenticateToken } = require('../middleware/authMid');
 const prisma = new PrismaClient();
 const router = express.Router();
 
-// 👉 GET all curated meals
 router.get("/meals", async (req, res) => {
   try {
     const meals = await prisma.meal.findMany();
@@ -16,7 +15,6 @@ router.get("/meals", async (req, res) => {
   }
 });
 
-// 👉 GET meals by category
 router.get("/meals/:category", async (req, res) => {
   const { category } = req.params;
 
