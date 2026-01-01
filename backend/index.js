@@ -1,15 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-
-const authRoutes = require('./routes/auth');
-const mealRoutes = require('./routes/meals');
-const insightsRoutes = require('./routes/insights');
-const swapsRoutes = require('./routes/swaps');
-const feedRoutes = require("./routes/feed");
-const userRoutes = require('./routes/user');
-
 const app = express();
+app.use(express.json())
+
+const authRoutes = require('./src/routes/auth');
+const mealRoutes = require('./src/routes/meals');
+const insightsRoutes = require('./src/routes/insights');
+const swapsRoutes = require('./src/routes/swaps');
+const feedRoutes = require("./src/routes/feed");
+const userRoutes = require('./src/routes/user');
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
@@ -30,8 +30,15 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
 
+app.get('/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`; // simple DB query
+    res.json({ status: 'ok', db: 'connected' });
+  } catch (err) {
+    res.status(503).json({ status: 'error', db: 'disconnected' });
+  }
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/meals', mealRoutes);  
@@ -45,11 +52,10 @@ app.get('/', (req, res) => {
   res.json({ message: 'MoodMeal API is running!' });
 });
 
-if(process.env.NODE_ENV === "development"){
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+
 
 module.exports = app;

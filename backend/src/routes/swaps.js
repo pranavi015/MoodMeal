@@ -77,7 +77,8 @@ router.post('/', authenticateToken, async (req, res) => {
         userId: req.user.id,
         originalFood,
         healthyAlternative,
-        description: description || null
+        description: description || null,
+        cravingType: null
       }
     });
 

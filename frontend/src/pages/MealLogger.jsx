@@ -33,9 +33,6 @@ export default function MealLogger() {
         return data.secure_url;
     };
 
-
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -66,7 +63,6 @@ export default function MealLogger() {
             setLoading(false);
         }
     };
-
 
     return (
         <Layout>
@@ -113,12 +109,12 @@ export default function MealLogger() {
                             onChange={(e) => setMoodAfter(e.target.value)}
                             className="w-full border rounded px-4 py-2 mt-2"
                         >
-                            <option>happy😊</option>
-                            <option>light😃</option>
-                            <option>satisfied😌</option>
-                            <option>heavy😐</option>
-                            <option>bloated😓</option>
-                            <option>unsure🤔</option>
+                            <option>happy</option>
+                            <option>light</option>
+                            <option>satisfied</option>
+                            <option>heavy</option>
+                            <option>bloated</option>
+                            <option>unsure</option>
 
                         </select>
                     </div>
