@@ -1,7 +1,7 @@
 MoodMeal – Emotion-Driven Healthy Eating Companion
 
-Frontend: https://your-app.vercel.app
-Backend API: https://your-api.render.com
+Frontend: mood-meal-web.vercel.app/login
+Backend API: https://mood-meal-server.vercel.app/
 
 Features
 -  Meal logging with mood tracking
