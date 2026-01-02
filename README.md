@@ -1,6 +1,6 @@
 MoodMeal – Emotion-Driven Healthy Eating Companion
 
-Frontend: mood-meal-web.vercel.app/
+Frontend: https://mood-meal-web.vercel.app/
 Backend API: https://mood-meal-server.vercel.app/
 
 Features
@@ -14,4 +14,5 @@ Tech Stack
 - Frontend: React.js, Vite, TailwindCSS
 - Backend: Node.js, Express.js, Prisma
 - Database: MySQL (Aiven)
+
 
