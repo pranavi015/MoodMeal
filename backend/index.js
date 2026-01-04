@@ -11,27 +11,29 @@ const swapsRoutes = require('./src/routes/swaps');
 const feedRoutes = require("./src/routes/feed");
 const userRoutes = require('./src/routes/user');
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "https://mood-meal-web.vercel.app",
-  "http://localhost:5173"
+app.use(express.json());
 
-];
-
-app.options("*", cors());
-
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      "https://mood-meal-web.vercel.app",
+      "http://localhost:5173",
+    ];
+
     if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
+      callback(null, true);
     } else {
-      return callback(new Error("Not allowed by CORS"));
+      callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true
-}));
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.get('/health', async (req, res) => {
   try {
