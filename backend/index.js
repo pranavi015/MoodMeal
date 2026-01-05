@@ -14,7 +14,6 @@ const swapsRoutes = require('./src/routes/swaps');
 const feedRoutes = require("./src/routes/feed");
 const userRoutes = require('./src/routes/user');
 
-app.use(express.json());
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -25,19 +24,16 @@ const corsOptions = {
       "https://mood-meal-web.vercel.app",
       "http://localhost:5173",
     ];
-
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(null, false); 
     }
   },
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-
 
 app.use('/api/auth', authRoutes);
 app.use('/api/meals', mealRoutes);  
