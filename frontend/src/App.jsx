@@ -6,7 +6,8 @@ import Swaps from './pages/swaps';
 import Profile from './pages/Profile';
 import Login from './pages/login';   
 import Signup from './pages/signup'; 
-import MealLogger from './pages/MealLogger'
+import MealLogger from './pages/MealLogger';
+
 function App() {
   return (
     <Router>
@@ -14,16 +15,17 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/Dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/meals" element={<Meals />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/swaps" element={<Swaps />} />
-        <Route path="/Profile" element={<Profile />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/meal-logger" element={<MealLogger />} />
+        <Route path="/meal-logger/:id" element={<MealLogger />} />
+
       </Routes>
     </Router>
   );
 }
 
 export default App;
-

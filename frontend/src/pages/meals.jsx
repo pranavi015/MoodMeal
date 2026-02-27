@@ -194,11 +194,11 @@ function Meals() {
 
         {/* Meals Grid */}
         {!loading && meals.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
             {meals.map(meal => (
               <div
               key={meal.id}
-              className="bg-white rounded-2xl shadow-md p-6 hover:shadow-xl transition-shadow duration-300"
+              className="bg-white rounded-2xl shadow-md p-6 hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
             >
               {/* Header with Meal name + Mood Badge */}
               <div className="flex justify-between items-center mb-3">
@@ -212,7 +212,7 @@ function Meals() {
                   }`}
                   title={`Mood: ${meal.moodAfter || 'unsure'}`}
                 >
-                  {meal.moodAfter || 'unsure'} {meal.moodAfter === 'light' ? 'light'+'😀' : meal.moodAfter === 'heavy' ? 'heavy'+'🙁': '😐'}
+                  {meal.moodAfter || 'unsure'} {meal.moodAfter === 'light' ? 'light'+'' : meal.moodAfter === 'heavy' ? 'heavy'+'': ''}
                 </span>
               </div>
             
@@ -241,7 +241,7 @@ function Meals() {
               </p>
             
               {/* Actions */}
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-4 mt-auto pt-4">
                 <button
                   className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition"
                   onClick={() => navigate(`/meal-logger/${meal.id}`)}

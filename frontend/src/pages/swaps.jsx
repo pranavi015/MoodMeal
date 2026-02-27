@@ -119,7 +119,7 @@ export default function Swaps() {
         });
         fetchCustomSwaps();
       } else {
-        alert(data.error || 'Failed to save swap');
+        alert(data.error);
       }
     } catch (err) {
       alert('Network error. Please try again.');

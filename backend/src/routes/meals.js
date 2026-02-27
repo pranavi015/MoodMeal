@@ -1,243 +1,246 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const jwt = require('jsonwebtoken');
 const { authenticateToken } = require('../middleware/authMid');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// const authenticateToken = (req, res, next) => {
-//     const authHeader = req.headers['authorization'];
-//     const token = authHeader && authHeader.split(' ')[1];
-
-//     if (!token) {
-//         return res.status(401).json({ error: 'Access denied' });
-//     }
-
-//     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-//         if (err) {
-//             return res.status(403).json({ error: 'Invalid token' });
-//         }
-//         req.user = user;
-//         next();
-//     });
-// };
-
+/* ==============================
+   GET ALL MEALS (with filters)
+============================== */
 router.get('/', authenticateToken, async (req, res) => {
-    try {
-        const {
-            page = 1,
-            limit = 10,
-            search = '',
-            sortBy = 'timestamp',
-            sortOrder = 'desc',
-            filterMealType,
-            filterMood
-        } = req.query;
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = '',
+      sortBy = 'timestamp',
+      sortOrder = 'desc',
+      filterMealType,
+      filterMood
+    } = req.query;
 
-        const pageNumber = parseInt(page);
-        const pageSize = parseInt(limit);
+    const pageNumber = parseInt(page);
+    const pageSize = parseInt(limit);
 
-        const skip = (pageNumber - 1) * pageSize;
-        const take = pageSize;
+    const skip = (pageNumber - 1) * pageSize;
 
-        const where = {
-            userId: req.user.userId,
-            AND: []
-        };
+    const where = {
+      userId: req.user.userId,
+      AND: []
+    };
 
-        //search
-        if (search) {
-            where.AND.push({
-              foods: { has: search }
-            });
-          }
-          
-          
-
-        // filter 
-        if (filterMealType) {
-            where.AND.push({
-                mealType: filterMealType
-            });
-        }
-
-        // filter
-        if (filterMood) {
-            where.AND.push({
-                moodAfter: filterMood
-            });
-        }
-
-        // sorting options
-        const validSortFields = ['timestamp', 'mealType'];
-        const sortField = validSortFields.includes(sortBy) ? sortBy : 'timestamp';
-
-        const validSortOrder = ['asc', 'desc'];
-        const order = validSortOrder.includes(sortOrder) ? sortOrder : 'desc';
-
-        const [meals, total] = await Promise.all([
-            prisma.userMeal.findMany({
-                where,
-                orderBy: {
-                    [sortField]: order
-                },
-                skip,
-                take
-            }),
-            prisma.userMeal.count({ where })
-        ]);
-
-        const totalPages = Math.ceil(total / pageSize);
-
-        res.json({
-            meals,
-            pagination: {
-                total,
-                page: pageNumber,
-                limit: pageSize,
-                totalPages
-            }
-        });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to fetch meals' });
-    }
-});
-
-//get a single meal
-router.get('/:id', authenticateToken, async (req, res) => {
-    try {
-        const meal = await prisma.userMeal.findFirst({
-            where: {
-                id: parseInt(req.params.id),
-                userId: req.user.userId
-            }
-        });
-
-        if (!meal) {
-            return res.status(404).json({ error: 'Meal not found' });
-        }
-
-        res.json(meal);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch meal' });
-    }
-});
-
-//create new meal
-router.post('/', authenticateToken, async (req, res) => {
-    try {
-        const { mealType, foods, photo, moodBefore, moodAfter, cravings, notes, timestamp } = req.body;
-
-        // if (!mealType || typeof mealType !== 'string') {
-        //     return res.status(400).json({ error: 'mealType is required and must be a string' });
-        // }
-
-        // if (!foods || (!Array.isArray(foods) && typeof foods !== 'string')) {
-        //     return res.status(400).json({ error: 'foods must be a string or an array' });
-        // }
-
-        const meal = await prisma.userMeal.create({
-            data: {
-                userId: req.user.userId,
-                mealType,
-                foods,
-                photo,
-                moodBefore,
-                moodAfter,
-                cravings,
-                notes,
-                timestamp: timestamp ? new Date(timestamp) : new Date()
-            }
-        });
-
-        res.status(201).json(meal);
-    } catch (error) {
-        res.status(400).json({ error: 'Failed to create meal' });
-    }
-});
-// router.post('/', authenticateToken, async (req, res) => {
-//     console.log("Received payload:", req.body);
-//     try {
-//         const { mealType, foods, photo, moodBefore, moodAfter, cravings, notes, timestamp } = req.body;
-
-//         const meal = await prisma.userMeal.create({
-//             data: {
-//                 userId: req.user.userId,
-//                 mealType,
-//                 foods,
-//                 photo,
-//                 moodBefore,
-//                 moodAfter,
-//                 cravings,
-//                 notes,
-//                 timestamp: timestamp ? new Date(timestamp) : new Date()
-//             }
-//         });
-
-//         res.status(201).json(meal);
-//     } catch (error) {
-//         console.error("Prisma create error:", error);
-//         res.status(400).json({ error: 'Failed to create meal' });
-//     }
-// });
-
-
-//update meal
-router.put('/:id', authenticateToken, async (req, res) => {
-    try {
-        const { mealType, foods, photo, moodBefore, moodAfter, cravings, notes } = req.body;
-
-        const meal = await prisma.userMeal.update({
-            where: {
-                id_userId: {
-                    id: parseInt(req.params.id),
-                    userId: req.user.userId
-                }
-            },
-            data: {
-                mealType,
-                foods,
-                photo,
-                moodBefore,
-                moodAfter,
-                cravings,
-                notes
-            }
-        });
-
-        if (meal.count === 0) {
-            return res.status(404).json({ error: 'Meal not found' });
-        }
-
-        res.json({ message: 'Meal updated', meal });
-    } catch (error) {
-        res.status(400).json({ error: 'Failed to update meal' });
-    }
-});
-
-//delete meal
-router.delete('/:id', authenticateToken, async (req, res) => {
-    try {
-      const result = await prisma.userMeal.deleteMany({
-        where: {
-          id: parseInt(req.params.id),
-          userId: req.user.userId
+    if (search) {
+      where.AND.push({
+        foods: {
+          contains: search,
+          mode: "insensitive"
         }
       });
-  
-      if (result.count === 0) {
-        return res.status(404).json({ error: "Meal not found" });
-      }
-  
-      res.json({ message: "Meal deleted" });
-    } catch (error) {
-      console.error("DELETE ERROR:", error);
-      res.status(500).json({ error: "Failed to delete meal" });
     }
-  });
-  
+
+    if (filterMealType) {
+      where.AND.push({ mealType: filterMealType });
+    }
+
+    if (filterMood) {
+      where.AND.push({ moodAfter: filterMood });
+    }
+
+    const validSortFields = ['timestamp', 'mealType'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'timestamp';
+
+    const validSortOrder = ['asc', 'desc'];
+    const order = validSortOrder.includes(sortOrder) ? sortOrder : 'desc';
+
+    const [meals, total] = await Promise.all([
+      prisma.userMeal.findMany({
+        where,
+        orderBy: { [sortField]: order },
+        skip,
+        take: pageSize
+      }),
+      prisma.userMeal.count({ where })
+    ]);
+
+    res.json({
+      meals,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages: Math.ceil(total / pageSize)
+      }
+    });
+
+  } catch (error) {
+    console.error("GET MEALS ERROR:", error);
+    res.status(500).json({ error: 'Failed to fetch meals' });
+  }
+});
+
+/* ==============================
+   GET SINGLE MEAL
+============================== */
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const mealId = parseInt(req.params.id);
+    if (isNaN(mealId)) {
+      return res.status(400).json({ error: "Invalid meal ID" });
+    }
+
+    const meal = await prisma.userMeal.findFirst({
+      where: {
+        id: mealId,
+        userId: req.user.userId
+      }
+    });
+
+    if (!meal) {
+      return res.status(404).json({ error: 'Meal not found' });
+    }
+
+    res.json(meal);
+
+  } catch (error) {
+    console.error("GET SINGLE MEAL ERROR:", error);
+    res.status(500).json({ error: 'Failed to fetch meal' });
+  }
+});
+
+/* ==============================
+   CREATE MEAL
+============================== */
+router.post('/', authenticateToken, async (req, res) => {
+  try {
+    const {
+      mealType,
+      foods,
+      photo,
+      moodBefore,
+      moodAfter,
+      cravings,
+      notes,
+      timestamp
+    } = req.body;
+
+    if (!mealType || !foods) {
+      return res.status(400).json({
+        error: "mealType and foods are required"
+      });
+    }
+
+    const meal = await prisma.userMeal.create({
+      data: {
+        userId: req.user.userId,
+        mealType,
+        foods,
+        photo: photo || null,
+        moodBefore: moodBefore || null,
+        moodAfter: moodAfter || null,
+        cravings: cravings || null,
+        notes: notes || null,
+        timestamp: timestamp ? new Date(timestamp) : new Date()
+      }
+    });
+
+    res.status(201).json(meal);
+
+  } catch (error) {
+    console.error("CREATE MEAL ERROR:", error);
+    res.status(500).json({ error: 'Failed to create meal' });
+  }
+});
+
+/* ==============================
+   UPDATE MEAL
+============================== */
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const mealId = parseInt(req.params.id);
+
+    if (isNaN(mealId)) {
+      return res.status(400).json({ error: "Invalid meal ID" });
+    }
+
+    const existingMeal = await prisma.userMeal.findFirst({
+      where: {
+        id: mealId,
+        userId: req.user.userId
+      }
+    });
+
+    if (!existingMeal) {
+      return res.status(404).json({ error: 'Meal not found' });
+    }
+
+    const {
+      mealType,
+      foods,
+      photo,
+      moodBefore,
+      moodAfter,
+      cravings,
+      notes
+    } = req.body;
+
+    const updateData = {};
+
+    if (mealType !== undefined) updateData.mealType = mealType;
+    if (foods !== undefined) updateData.foods = foods;
+    if (photo !== undefined) updateData.photo = photo || null;
+    if (moodBefore !== undefined) updateData.moodBefore = moodBefore || null;
+    if (moodAfter !== undefined) updateData.moodAfter = moodAfter || null;
+    if (cravings !== undefined) updateData.cravings = cravings || null;
+    if (notes !== undefined) updateData.notes = notes || null;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No fields provided for update" });
+    }
+
+    const updatedMeal = await prisma.userMeal.update({
+      where: { id: mealId },
+      data: updateData
+    });
+
+    res.json(updatedMeal);
+
+  } catch (error) {
+    console.error("UPDATE ERROR FULL:", error);
+    res.status(500).json({
+      error: error.message || "Failed to update meal"
+    });
+  }
+});
+
+/* ==============================
+   DELETE MEAL
+============================== */
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const mealId = parseInt(req.params.id);
+
+    if (isNaN(mealId)) {
+      return res.status(400).json({ error: "Invalid meal ID" });
+    }
+
+    const result = await prisma.userMeal.deleteMany({
+      where: {
+        id: mealId,
+        userId: req.user.userId
+      }
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({ error: "Meal not found" });
+    }
+
+    res.json({ message: "Meal deleted successfully" });
+
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    res.status(500).json({ error: "Failed to delete meal" });
+  }
+});
 
 module.exports = router;
