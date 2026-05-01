@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import Layout from '../components/Layout';
 import { User, Mail, Calendar } from 'lucide-react';
 
 function Profile() {
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
+
 
   useEffect(() => {
     const userData = localStorage.getItem('user');

@@ -9,7 +9,7 @@ export default function Swaps() {
   const [customSwaps, setCustomSwaps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const navigate = useNavigate();
 
   // Form states
   const [showForm, setShowForm] = useState(false);
@@ -26,6 +26,7 @@ export default function Swaps() {
   // Fetch user's custom swaps on load
   useEffect(() => {
     fetchCustomSwaps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchCustomSwaps = async () => {

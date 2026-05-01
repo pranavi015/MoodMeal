@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 
 function Dashboard() {
   const [user, setUser] = useState(null);
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     mealsTracked: null,
     moodLogs: null,
     healthySwaps: null

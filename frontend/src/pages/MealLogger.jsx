@@ -13,7 +13,7 @@ export default function MealLogger() {
   const [mealType, setMealType] = useState("breakfast");
   const [foods, setFoods] = useState("");
   const [moodAfter, setMoodAfter] = useState("unsure");
-  const [moodBefore, setMoodBefore] = useState("");
+  const [moodBefore] = useState("");
   const [notes, setNotes] = useState("");
   const [photo, setPhoto] = useState(null);
   const [existingPhoto, setExistingPhoto] = useState("");
