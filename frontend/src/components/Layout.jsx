@@ -2,7 +2,7 @@ import Sidebar from './Sidebar';
 
 function Layout({ children }) {
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className="flex min-h-screen bg-[#F8FAFC]">
       <Sidebar />
       <main className="flex-1 overflow-auto">
         {children}

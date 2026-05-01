@@ -26,9 +26,9 @@ function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-gray-200">
         <Link to="/dashboard" className="flex items-center">
-          <Leaf className="w-8 h-8 mr-2 text-[#4ADE80]" />
-          <h1 className="text-xl font-extrabold text-gray-900">
-            Mood<span className="text-[#4ADE80]">Meal</span>
+          <Leaf className="w-8 h-8 mr-2 text-[#22C55E]" />
+          <h1 className="text-xl font-extrabold text-[#111827]">
+            Mood<span className="text-[#22C55E]">Meal</span>
           </h1>
         </Link>
       </div>
@@ -43,11 +43,11 @@ function Sidebar() {
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
                 isActive(item.path)
-                  ? 'bg-[#4ADE80] text-white shadow-md'
+                  ? 'bg-[#DCFCE7] text-[#166534]'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className={`w-5 h-5 ${isActive(item.path) ? 'text-[#166534]' : ''}`} />
               <span>{item.label}</span>
             </Link>
           );
