@@ -102,7 +102,8 @@ function Meals() {
       <button
         key={i}
         onClick={() => goToPage(i)}
-        className={`px-3 py-1 rounded ${page === i ? 'bg-green-400 text-white' : 'bg-gray-200'}`}
+        className={`w-9 h-9 flex items-center justify-center rounded-lg font-medium transition-all ${page === i ? 'bg-[#22C55E] text-white' : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] focus:ring-2 focus:ring-[#22C55E] focus:outline-none'}`}
+        aria-label={`Go to page ${i}`}
       >
         {i}
       </button>
@@ -114,11 +115,11 @@ function Meals() {
       <div className="p-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-extrabold text-gray-800">My Meals</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+          <h1 className="text-2xl font-semibold text-gray-900">My Meals</h1>
           <Link
             to="/meal-logger"
-            className="flex items-center gap-2 px-6 py-3 bg-green-400 text-white rounded-xl font-bold hover:bg-green-500"
+            className="flex items-center gap-2 px-[16px] py-[10px] bg-[#22C55E] text-white rounded-xl font-bold shadow-[0_4px_10px_rgba(34,197,94,0.25)] hover:bg-[#16A34A] transition-all focus:ring-2 focus:ring-offset-2 focus:ring-[#22C55E] focus:outline-none w-fit"
           >
             <Plus className="w-5 h-5" />
             Log New Meal
@@ -126,7 +127,7 @@ function Meals() {
         </div>
 
         {/* Controls */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
 
           {/* Search */}
           <input
@@ -134,30 +135,32 @@ function Meals() {
             placeholder="Search meals by food..."
             value={search}
             onChange={handleSearchChange}
-            className="border rounded px-4 py-2 w-full md:w-1/3"
+            className="h-10 border border-[#E5E7EB] rounded-[10px] px-3 bg-[#FFFFFF] w-full lg:w-1/3 focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent text-[#0F172A]"
+            aria-label="Search meals"
           />
 
           {/* Sort */}
-          <div className="flex items-center gap-2">
-            <select value={sortBy} onChange={handleSortChange} className="border rounded px-3 py-2">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <select value={sortBy} onChange={handleSortChange} className="h-10 border border-[#E5E7EB] rounded-[10px] px-3 bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent text-[#0F172A] w-full sm:w-auto">
               <option value="timestamp">Sort by Date</option>
               <option value="mealType">Sort by Meal Type</option>
             </select>
 
-            <select value={sortOrder} onChange={handleSortOrderChange} className="border rounded px-3 py-2">
+            <select value={sortOrder} onChange={handleSortOrderChange} className="h-10 border border-[#E5E7EB] rounded-[10px] px-3 bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent text-[#0F172A] w-full sm:w-auto">
               <option value="desc">Descending</option>
               <option value="asc">Ascending</option>
             </select>
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2 overflow-x-auto">
+          <div className="flex gap-3 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide w-full lg:w-auto">
             {MEAL_TYPES.map(type => (
               <button
                 key={type}
                 onClick={() => handleFilterClick(type)}
-                className={`px-4 py-2 rounded font-semibold ${filterMealType === type ? 'bg-green-400 text-white' : 'bg-gray-200'
+                className={`px-4 h-10 rounded-[10px] font-medium whitespace-nowrap transition-all focus:ring-2 focus:ring-[#22C55E] focus:outline-none ${filterMealType === type ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0]'
                   }`}
+                aria-pressed={filterMealType === type}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
@@ -174,45 +177,56 @@ function Meals() {
 
         {/* Empty */}
         {!loading && meals.length === 0 && (
-          <div className="bg-white rounded-3xl shadow-lg p-12 text-center">
-            <Utensils className="w-24 h-24 mx-auto text-gray-300 mb-6" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">No meals logged yet</h2>
-            <p className="text-gray-600 mb-8">
-              Start tracking your meals to see insights about your eating habits!
+          <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-[16px] p-12 text-center shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
+            <Utensils className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <h2 className="text-xl font-semibold text-[#0F172A] mb-2">
+              {search ? `No results found for '${search}'` : "No meals yet"}
+            </h2>
+            <p className="text-[#64748B] mb-6">
+              {search ? "Try adjusting your search or filters." : "Start by logging your first meal."}
             </p>
-            <button>
+            {!search && (
               <Link
                 to="/meal-logger"
-                className="flex items-center gap-2 px-6 py-3 bg-green-400 text-white rounded-xl font-bold hover:bg-green-500"
+                className="inline-flex items-center gap-2 px-[16px] py-[10px] bg-[#22C55E] text-white rounded-xl font-bold shadow-[0_4px_10px_rgba(34,197,94,0.25)] hover:bg-[#16A34A] transition-all"
               >
                 <Plus className="w-5 h-5" />
                 Log New Meal
               </Link>
-            </button>
+            )}
           </div>
         )}
 
         {/* Meals Grid */}
         {!loading && meals.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
             {meals.map(meal => (
               <div
               key={meal.id}
-              className="bg-white rounded-2xl shadow-md p-6 hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
+              className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-[16px] shadow-[0_8px_20px_rgba(0,0,0,0.06)] p-[16px] hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col min-h-[180px] cursor-pointer"
+              onClick={(e) => {
+                // Prevent navigation if clicking actions
+                if (!e.target.closest('button')) {
+                  navigate(`/meal-logger/${meal.id}`);
+                }
+              }}
             >
               {/* Header with Meal name + Mood Badge */}
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-2xl font-bold text-gray-900 capitalize">{meal.foods}</h2>
+              <div className="flex justify-between items-start mb-3 gap-2">
+                <h2 className="text-[18px] font-semibold text-[#0F172A] leading-tight line-clamp-2">
+                  {meal.foods ? meal.foods.charAt(0).toUpperCase() + meal.foods.slice(1).toLowerCase() : 'Unnamed Meal'}
+                </h2>
                 <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-semibold
+                  className={`shrink-0 inline-block px-3 py-1 rounded-full text-[12px] font-medium
                   ${
-                    meal.moodAfter === 'light' ? 'bg-green-200 text-green-800' :
-                    meal.moodAfter === 'heavy' ? 'bg-red-200 text-red-800' :
-                    'bg-gray-200 text-gray-600'
+                    meal.moodAfter?.toLowerCase() === 'light' ? 'bg-[#DCFCE7] text-[#166534]' :
+                    meal.moodAfter?.toLowerCase() === 'heavy' ? 'bg-[#FEE2E2] text-[#991B1B]' :
+                    meal.moodAfter?.toLowerCase() === 'satisfied' ? 'bg-[#E2E8F0] text-[#334155]' :
+                    'bg-[#F1F5F9] text-[#64748B]'
                   }`}
                   title={`Mood: ${meal.moodAfter || 'unsure'}`}
                 >
-                  {meal.moodAfter || 'unsure'} {meal.moodAfter === 'light' ? 'light'+'' : meal.moodAfter === 'heavy' ? 'heavy'+'': ''}
+                  {meal.moodAfter ? meal.moodAfter.charAt(0).toUpperCase() + meal.moodAfter.slice(1).toLowerCase() : 'Unsure'}
                 </span>
               </div>
             
@@ -220,45 +234,55 @@ function Meals() {
               {meal.photo && (
                 <img
                   src={meal.photo}
-                  alt={`${meal.mealType} photo`}
+                  alt={`${meal.mealType || 'Meal'} photo`}
                   className="w-full h-44 object-cover rounded-lg mb-4 shadow-sm"
                 />
               )}
             
               {/* Meal Type Badge */}
               {meal.mealType && (
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded uppercase mb-2">
+                <span className="inline-block bg-[#EEF2FF] text-[#3730A3] text-[12px] font-medium px-2 py-1 rounded-[6px] uppercase mb-2 w-fit">
                   {meal.mealType}
                 </span>
               )}
             
               {/* Notes */}
-              {meal.notes && <p className="text-gray-700 mb-4">{meal.notes}</p>}
+              {meal.notes && <p className="text-[#475569] text-sm mb-4 line-clamp-2">{meal.notes}</p>}
             
-              {/* Timestamp */}
-              <p className="text-xs text-gray-400 mb-5 italic">
-                {meal.timestamp ? new Date(meal.timestamp).toLocaleString() : "No timestamp"}
-              </p>
+              <div className="flex-grow"></div>
             
-              {/* Actions */}
-              <div className="flex justify-end gap-4 mt-auto pt-4">
-                <button
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition"
-                  onClick={() => navigate(`/meal-logger/${meal.id}`)}
-                  aria-label="Edit meal"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span className="hidden sm:inline">Edit</span>
-                </button>
-            
-                <button
-                  className="flex items-center gap-1 text-red-600 hover:text-red-800 transition"
-                  onClick={() => handleDelete(meal.id)}
-                  aria-label="Delete meal"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Delete</span>
-                </button>
+              <div className="flex items-center justify-between mt-4">
+                {/* Timestamp */}
+                <p className="text-[12px] text-[#64748B]">
+                  {meal.timestamp 
+                    ? `${new Date(meal.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • ${new Date(meal.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` 
+                    : "No timestamp"}
+                </p>
+              
+                {/* Actions */}
+                <div className="flex justify-end gap-4">
+                  <button
+                    className="flex items-center gap-1.5 text-[#475569] hover:text-[#2563EB] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2563EB] rounded p-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/meal-logger/${meal.id}`);
+                    }}
+                    aria-label="Edit meal"
+                  >
+                    <Edit className="w-[18px] h-[18px]" />
+                  </button>
+              
+                  <button
+                    className="flex items-center gap-1.5 text-[#475569] hover:text-[#DC2626] transition-colors focus:outline-none focus:ring-2 focus:ring-[#DC2626] rounded p-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(meal.id);
+                    }}
+                    aria-label="Delete meal"
+                  >
+                    <Trash2 className="w-[18px] h-[18px]" />
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -268,21 +292,23 @@ function Meals() {
 
         {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
+          <div className="mt-10 flex justify-center items-center gap-3">
             <button
               disabled={page === 1}
               onClick={() => goToPage(page - 1)}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              className="px-4 h-9 flex items-center bg-[#F1F5F9] text-[#334155] font-medium rounded-lg disabled:opacity-50 hover:bg-[#E2E8F0] transition-colors focus:ring-2 focus:ring-[#22C55E] focus:outline-none"
             >
               Prev
             </button>
 
-            {paginationButtons}
+            <div className="flex items-center gap-2">
+              {paginationButtons}
+            </div>
 
             <button
               disabled={page === totalPages}
               onClick={() => goToPage(page + 1)}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              className="px-4 h-9 flex items-center bg-[#F1F5F9] text-[#334155] font-medium rounded-lg disabled:opacity-50 hover:bg-[#E2E8F0] transition-colors focus:ring-2 focus:ring-[#22C55E] focus:outline-none"
             >
               Next
             </button>
