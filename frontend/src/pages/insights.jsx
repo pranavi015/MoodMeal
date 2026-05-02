@@ -17,12 +17,12 @@ function Insights() {
 
   const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
-  const moodEmoji = {
-    happy: "😊",
-    neutral: "😐",
-    sad: "😢",
-    stressed: "😣",
-    energetic: "⚡",
+  const moodNames = {
+    happy: "Happy",
+    neutral: "Neutral",
+    sad: "Sad",
+    stressed: "Stressed",
+    energetic: "Energetic",
   };
 
   const moodColors = {
@@ -157,7 +157,7 @@ function Insights() {
                       <p className="text-sm text-gray-700 font-semibold">
                         {new Date(item.date).getDate()}
                       </p>
-                      <p className="text-2xl">{moodEmoji[item.mood] || "🙂"}</p>
+                      <p className="text-base font-bold text-gray-800 my-1">{moodNames[item.mood] || "Unsure"}</p>
                       <p className="text-xs text-gray-600 mt-1">
                         {item.mealCount} meals
                       </p>

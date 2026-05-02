@@ -7,7 +7,7 @@ const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack", "dessert"];
 
 export default function MealLogger() {
   const navigate = useNavigate();
-  const { id } = useParams(); // ✅ get id from URL
+  const { id } = useParams(); // get id from URL
   const isEditMode = Boolean(id);
 
   const [mealType, setMealType] = useState("breakfast");
@@ -19,7 +19,7 @@ export default function MealLogger() {
   const [existingPhoto, setExistingPhoto] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch meal if editing
+  // Fetch meal if editing
   useEffect(() => {
     if (!isEditMode) return;
 
