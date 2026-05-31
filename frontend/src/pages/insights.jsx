@@ -1,216 +1,159 @@
-import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import { TrendingUp } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import axios from 'axios';
+import Layout from '../components/Layout';
+import { MessageSquare, Sparkles, Send, BrainCircuit, Activity, Moon, Sun, ArrowRight } from 'lucide-react';
 
-function Insights() {
-  const [calendarData, setCalendarData] = useState([]);
-  const [patternsData, setPatternsData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [, setUser] = useState(null);
-  const [view, setView] = useState("week");
-
-  const navigate = useNavigate();
-
-  const token = localStorage.getItem("token");
-
-  const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-
-  const moodNames = {
-    happy: "Happy",
-    neutral: "Neutral",
-    sad: "Sad",
-    stressed: "Stressed",
-    energetic: "Energetic",
-  };
-
-  const moodColors = {
-    happy: "bg-green-200",
-    neutral: "bg-gray-200",
-    sad: "bg-blue-200",
-    stressed: "bg-red-200",
-    energetic: "bg-yellow-200",
-  };
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-
-    if (!token || !userData) {
-      navigate('/login');
-      return;
+const Insights = () => {
+  const [query, setQuery] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+    {
+      role: 'ai',
+      content: "Hello! I'm your MoodMeal AI. I analyze your meal logs and how you feel afterward. Ask me anything about your food-mood correlations, like 'Why do pancakes make me tired?'"
     }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
 
-    setUser(JSON.parse(userData));
-  }, [navigate]);
+  const mockHistoricalInsights = [
+    {
+      title: "Morning Energy Dip",
+      desc: "You often report feeling sluggish 2 hours after eating refined carbs for breakfast.",
+      icon: <Moon className="w-5 h-5 text-[#8ca38c]" />
+    },
+    {
+      title: "Focus Booster",
+      desc: "Meals rich in Omega-3s (like salmon and avocado) correlate with your highest focus days.",
+      icon: <BrainCircuit className="w-5 h-5 text-[#6b8e6b]" />
+    },
+    {
+      title: "Afternoon Vitality",
+      desc: "Replacing coffee with matcha has stabilized your 3 PM energy crashes.",
+      icon: <Sun className="w-5 h-5 text-[#e5b362]" />
+    }
+  ];
 
-  useEffect(() => {
-    async function fetchInsights() {
-      setLoading(true);
-      setError("");
+  const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-      try {
-        const [calendarRes, patternsRes] = await Promise.all([
-          fetch(`${API_URL}/api/insights/mood-calendar?view=${view}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-          }),
-          fetch(`${API_URL}/api/insights/patterns`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-          }),
-        ]);
+  const handleAsk = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
 
-        if (!calendarRes.ok || !patternsRes.ok) {
-          const calendarText = await calendarRes.text();
-          const patternsText = await patternsRes.text();
+    const userMessage = { role: 'user', content: query };
+    setChatHistory(prev => [...prev, userMessage]);
+    setQuery('');
+    setIsTyping(true);
 
-          console.error('Calendar response:', calendarText);
-          console.error('Patterns response:', patternsText);
-
-          throw new Error(`API Error - Calendar: ${calendarRes.status}, Patterns: ${patternsRes.status}`);
-        }
-
-        const cal = await calendarRes.json();
-        const patt = await patternsRes.json();
-
-        setCalendarData(cal.calendarData || []);
-        setPatternsData(
-          (patt.topMoodBoostingFoods || []).sort((a, b) => b.count - a.count)
-        );
-
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setError(err.message || "Failed to load insights");
-      } finally {
-        setLoading(false);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/insights/chat`,
+        { question: userMessage.content },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        setChatHistory(prev => [...prev, { role: 'ai', content: response.data.answer }]);
       }
+    } catch (error) {
+      console.error("Error fetching AI insight:", error);
+      setChatHistory(prev => [...prev, { role: 'ai', content: "Sorry, I had trouble connecting to the brain! Please try again later." }]);
+    } finally {
+      setIsTyping(false);
     }
-
-    if (token) {
-      fetchInsights();
-    }
-  }, [view, token, API_URL]);
+  };
 
   return (
     <Layout>
-      <div className="p-8">
-        <h1 className="text-4xl font-extrabold text-gray-800 mb-10">
-          Insights & Analytics
-        </h1>
+      <div className="p-6 md:p-10 max-w-7xl mx-auto h-[calc(100vh-2rem)] flex flex-col">
+        <header className="mb-8">
+          <h1 className="text-4xl font-serif font-bold text-[#2c3e2d] mb-2 flex items-center gap-3">
+            <Sparkles className="w-8 h-8 text-[#6b8e6b]" />
+            AI Food-Mood Insights
+          </h1>
+          <p className="text-lg text-[#5c705c]">Understand your body. Ask questions about your dietary patterns.</p>
+        </header>
 
-        {loading && (
-          <div className="bg-white rounded-3xl shadow-lg p-12 text-center">
-            <TrendingUp className="w-20 h-20 mx-auto text-gray-300 mb-6 animate-spin" />
-            <h2 className="text-xl text-gray-700">Loading insights...</h2>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-xl mb-6">
-            <p className="font-semibold">Error loading insights:</p>
-            <p className="text-sm mt-1">{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            <div className="flex justify-end mb-6">
-              <div className="flex gap-2 bg-white shadow rounded-full px-4 py-2">
-                {["week", "month"].map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => setView(v)}
-                    className={`px-4 py-1 rounded-full text-sm font-medium transition 
-                      ${view === v
-                        ? "bg-gray-800 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                  >
-                    {v === "week" ? "Week View" : "Month View"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Mood Calendar Heatmap */}
-            <div className="bg-white rounded-3xl shadow-lg p-8 mb-10">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Mood Calendar
-              </h2>
-
-              {calendarData.length === 0 ? (
-                <p className="text-gray-600">No mood data available yet. Start logging meals!</p>
-              ) : (
-                <div className="grid grid-cols-7 gap-3">
-                  {calendarData.map((item, index) => (
-                    <div
-                      key={index}
-                      className={`p-3 rounded-xl shadow-sm text-center hover:scale-105 transition cursor-pointer ${moodColors[item.mood] || "bg-gray-100"
-                        }`}
-                    >
-                      <p className="text-sm text-gray-700 font-semibold">
-                        {new Date(item.date).getDate()}
-                      </p>
-                      <p className="text-base font-bold text-gray-800 my-1">{moodNames[item.mood] || "Unsure"}</p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {item.mealCount} meals
-                      </p>
-                    </div>
-                  ))}
+        <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0">
+          
+          {/* Main Chat Area */}
+          <div className="flex-1 bg-white rounded-[2rem] shadow-sm border border-[#e0e8e0] flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+              {chatHistory.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] rounded-2xl p-5 ${
+                    msg.role === 'user' 
+                    ? 'bg-[#2c3e2d] text-white rounded-tr-sm' 
+                    : 'bg-[#faf9f6] text-[#2c3e2d] border border-[#e0e8e0] rounded-tl-sm'
+                  }`}>
+                    {msg.role === 'ai' && (
+                      <div className="flex items-center gap-2 mb-2 font-serif font-bold text-[#6b8e6b]">
+                        <BrainCircuit className="w-4 h-4" /> MoodMeal AI
+                      </div>
+                    )}
+                    <p className="leading-relaxed text-[1.05rem]">{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-[#faf9f6] border border-[#e0e8e0] rounded-2xl rounded-tl-sm p-5 flex gap-1">
+                    <span className="w-2 h-2 bg-[#a3bfa3] rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-[#a3bfa3] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                    <span className="w-2 h-2 bg-[#a3bfa3] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Patterns Section */}
-            <div className="bg-white rounded-3xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Food-Mood Patterns
-              </h2>
-
-              {patternsData.length === 0 ? (
-                <p className="text-gray-600">No patterns detected yet. Keep logging meals to discover patterns!</p>
-              ) : (
-                <ul className="space-y-4">
-                  {patternsData.map((p, index) => (
-                    <li
-                      key={index}
-                      className="p-4 rounded-xl bg-gray-50 shadow-sm flex justify-between items-center"
-                    >
-                      <span className="text-lg font-medium text-gray-800">
-                        {p.food}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-600 font-semibold">
-                          ↑ {p.moodImprovement}
-                        </span>
-                        <span className="text-gray-400">|</span>
-                        <span className="text-red-600 font-semibold">
-                          ↓ {p.moodDecline}
-                        </span>
-                        <span className="text-gray-400">|</span>
-                        <span className="text-gray-600">
-                          = {p.moodStable}
-                        </span>
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        {p.count} times
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="p-6 bg-[#faf9f6] border-t border-[#e0e8e0]">
+              <form onSubmit={handleAsk} className="relative">
+                <input 
+                  type="text" 
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="e.g., Why did pancakes make me tired?" 
+                  className="w-full pl-6 pr-16 py-4 bg-white border border-[#e0e8e0] rounded-2xl outline-none focus:border-[#6b8e6b] focus:ring-2 focus:ring-[#6b8e6b]/20 transition-all text-lg shadow-sm"
+                />
+                <button 
+                  type="submit"
+                  disabled={!query.trim() || isTyping}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-[#6b8e6b] text-white rounded-xl hover:bg-[#597859] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </form>
             </div>
-          </>
-        )}
+          </div>
+
+          {/* Sidebar Insights */}
+          <div className="lg:w-[350px] space-y-6 overflow-y-auto pr-2 pb-8">
+            <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#e0e8e0]">
+              <h3 className="font-serif text-xl font-bold text-[#2c3e2d] mb-6 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-[#6b8e6b]" />
+                Recent Patterns
+              </h3>
+              <div className="space-y-4">
+                {mockHistoricalInsights.map((insight, idx) => (
+                  <div key={idx} className="p-4 bg-[#faf9f6] rounded-xl border border-[#e0e8e0]/50 hover:border-[#6b8e6b]/50 transition-colors cursor-pointer group">
+                    <div className="flex gap-3 mb-2">
+                      <div className="mt-1 bg-white p-1.5 rounded-lg shadow-sm">
+                        {insight.icon}
+                      </div>
+                      <h4 className="font-bold text-[#2c3e2d] group-hover:text-[#6b8e6b] transition-colors">{insight.title}</h4>
+                    </div>
+                    <p className="text-[#5c705c] text-sm leading-relaxed">{insight.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <button className="w-full mt-6 py-3 text-[#6b8e6b] font-medium flex justify-center items-center gap-2 hover:bg-[#edf2ec] rounded-xl transition-colors">
+                View All History <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
     </Layout>
   );
-}
+};
 
 export default Insights;

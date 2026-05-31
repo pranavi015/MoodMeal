@@ -13,7 +13,7 @@ const insightsRoutes = require('./src/routes/insights');
 const swapsRoutes = require('./src/routes/swaps');
 const feedRoutes = require("./src/routes/feed");
 const userRoutes = require('./src/routes/user');
-
+const fridgeRoutes = require('./src/routes/fridge');
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -41,6 +41,7 @@ app.use('/api/insights', insightsRoutes);
 app.use('/api/swaps', swapsRoutes);
 app.use("/api/feed", feedRoutes);
 app.use('/user', userRoutes);
+app.use('/api/fridge', fridgeRoutes);
 
 
 app.get('/', (req, res) => {

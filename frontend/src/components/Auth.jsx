@@ -6,7 +6,7 @@ import { Leaf, CheckCircle, AlertTriangle } from 'lucide-react';
 function AuthForm({ mode }) {
   const navigate = useNavigate();
   const isSignup = mode === "signup";
-  const API_URL = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+  const API_URL = (import.meta.env.VITE_BACKEND_URL )
 
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -43,13 +43,13 @@ function AuthForm({ mode }) {
       if (isSignup) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        showMessage('Account created successfully! Redirecting to dashboard...', 'success');
-        setTimeout(() => navigate('/dashboard'), 1500);
+        showMessage('Account created successfully! Redirecting...', 'success');
+        setTimeout(() => navigate('/discover'), 1500);
       } else {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         showMessage('Login successful! Redirecting...', 'success');
-        setTimeout(() => navigate('/dashboard'), 1500);
+        setTimeout(() => navigate('/discover'), 1500);
       }
     } catch (err) {
       showMessage(err.response?.data?.error || `${isSignup ? 'Signup' : 'Login'} failed.`, 'error');
@@ -68,10 +68,10 @@ function AuthForm({ mode }) {
         
         {/* Left Panel */}
         <div className="lg:w-[55%] p-8 lg:p-[32px] flex flex-col justify-center bg-white">
-          <div className="flex items-center mb-8">
-            <Leaf className="w-9 h-9 mr-2.5 text-[#22C55E]" />
-            <h1 className="text-2xl font-semibold text-[#111827]">
-              Mood<span className="text-[#22C55E]">Meal</span>
+          <div className="flex items-center mb-8 gap-2">
+            <Leaf className="w-9 h-9 text-[#6b8e6b]" />
+            <h1 className="text-2xl font-serif font-bold tracking-tight text-[#2c3e2d]">
+              MoodMeal
             </h1>
           </div>
 
@@ -89,7 +89,7 @@ function AuthForm({ mode }) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl font-serif font-bold text-[#2c3e2d] mb-6">
               {isSignup ? 'Sign Up' : 'Login'}
             </h2>
 
@@ -157,7 +157,7 @@ function AuthForm({ mode }) {
             <button
               type="submit"
               disabled={isLoading || !!passwordError}
-              className="w-full h-[44px] flex justify-center items-center mt-6 rounded-xl text-lg font-bold text-white bg-[#22C55E] hover:bg-[#16A34A] active:bg-[#15803D] shadow-[0_4px_12px_rgba(34,197,94,0.25)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-[44px] flex justify-center items-center mt-6 rounded-xl text-lg font-bold text-white bg-[#2c3e2d] hover:bg-[#3a523b] active:bg-[#1a261b] shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -199,12 +199,11 @@ function AuthForm({ mode }) {
           <div className="absolute inset-0 bg-black/35"></div>
 
           <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-12 z-10">
-            <h2 className="text-[36px] md:text-[40px] leading-[1.2] font-extrabold text-[#FFFFFF] mb-3">
-              Cultivate a <span className="text-[#22C55E]">happier</span> you<br />
-              through food
+            <h2 className="text-[36px] md:text-[40px] leading-[1.2] font-serif font-bold text-[#faf9f6] mb-3">
+              Nourish your <span className="italic text-[#a3bfa3]">body & soul</span>
             </h2>
-            <p className="text-xl font-semibold text-white/85 mt-2">
-              Track your meals, understand your mood
+            <p className="text-xl font-medium text-white/85 mt-2">
+              Healthy & Delicious meals curated for your wellbeing.
             </p>
           </div>
         </div>

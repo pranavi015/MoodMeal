@@ -5,6 +5,7 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient()
 const { authenticateToken } = require('../middleware/authMid');
+const { answerInsightQuestion } = require('../services/aiService');
 
 // const authenticateToken = (req, res, next) => {
 //   const authHeader = req.headers['authorization'];
@@ -22,6 +23,40 @@ const { authenticateToken } = require('../middleware/authMid');
 //     next();
 //   });
 // };
+
+router.post('/chat', authenticateToken, async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) {
+      return res.status(400).json({ error: 'Question is required' });
+    }
+
+    // Fetch user's recent meals for context
+    const recentMeals = await prisma.userMeal.findMany({
+      where: { userId: req.user.userId },
+      include: {
+        moodLogs: {
+          select: { moodState: true, intensity: true }
+        }
+      },
+      orderBy: { timestamp: 'desc' },
+      take: 10
+    });
+
+    // Format logs for the AI prompt
+    const userLogs = recentMeals.map(meal => ({
+      foods: meal.foods,
+      moodLogs: meal.moodLogs
+    }));
+
+    const answer = await answerInsightQuestion(question, userLogs);
+    
+    res.json({ success: true, answer });
+  } catch (error) {
+    console.error('Error in /chat:', error);
+    res.status(500).json({ error: 'Failed to get AI response' });
+  }
+});
 
 router.get('/mood-calendar', authenticateToken, async (req, res) => {
   try {
@@ -133,6 +168,7 @@ router.get('/patterns', authenticateToken, async (req, res) => {
     });
 
     const foodMoodMap = {};
+    const timeMoodMap = {};
 
     meals.forEach(meal => {
       // mood derived from moodLogs
@@ -188,6 +224,28 @@ router.get('/patterns', authenticateToken, async (req, res) => {
           foodMoodMap[food].moodStable++;
         }
       });
+      
+      // Calculate Time-based patterns
+      const hour = new Date(meal.timestamp).getHours();
+      let timeBlock = 'other';
+      if (hour >= 5 && hour < 11) timeBlock = 'morning';
+      else if (hour >= 11 && hour < 15) timeBlock = 'lunch';
+      else if (hour >= 15 && hour < 18) timeBlock = 'afternoon';
+      else if (hour >= 18 || hour < 5) timeBlock = 'evening';
+
+      if (!timeMoodMap[timeBlock]) {
+        timeMoodMap[timeBlock] = {
+          count: 0,
+          moodImprovement: 0,
+          moodDecline: 0,
+          moodStable: 0
+        };
+      }
+      
+      timeMoodMap[timeBlock].count++;
+      if (moodImproved) timeMoodMap[timeBlock].moodImprovement++;
+      else if (moodDeclined) timeMoodMap[timeBlock].moodDecline++;
+      else timeMoodMap[timeBlock].moodStable++;
     });
 
     const topFoods = Object.values(foodMoodMap)
@@ -195,8 +253,39 @@ router.get('/patterns', authenticateToken, async (req, res) => {
       .sort((a, b) => b.moodImprovement - a.moodImprovement)
       .slice(0, 10);
 
+    // Generate signals from timeMoodMap
+    const signals = [];
+    Object.entries(timeMoodMap).forEach(([block, data]) => {
+      if (data.count >= 2) { // Need at least 2 meals to form a pattern
+        const total = data.moodImprovement + data.moodDecline + data.moodStable;
+        if (data.moodDecline / total >= 0.5) {
+          signals.push({
+             type: 'negative',
+             timeBlock: block,
+             title: `${block.charAt(0).toUpperCase() + block.slice(1)} Pattern`,
+             text: `${block.charAt(0).toUpperCase() + block.slice(1)} meals often correlate with a dip in energy or lower mood.`
+          });
+        } else if (data.moodImprovement / total >= 0.5) {
+          signals.push({
+             type: 'positive',
+             timeBlock: block,
+             title: `${block.charAt(0).toUpperCase() + block.slice(1)} Boost`,
+             text: `You tend to feel energized and positive after your ${block} meals.`
+          });
+        } else if (data.moodStable / total >= 0.5) {
+          signals.push({
+             type: 'stable',
+             timeBlock: block,
+             title: `Early Signal`,
+             text: `You tend to feel stable/neutral after ${block} meals.`
+          });
+        }
+      }
+    });
+
     return res.json({
       topMoodBoostingFoods: topFoods,
+      timeSignals: signals,
       weeklyTrend: {},
       totalMealsLogged: meals.length
     });

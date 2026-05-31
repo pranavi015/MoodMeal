@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Leaf, LayoutDashboard, Utensils, Heart, Sparkles, User, LogOut, TrendingUp } from 'lucide-react';
+import { Leaf, Search, ShoppingBag, Snowflake, MessageSquare, User, LogOut } from 'lucide-react';
 
 function Sidebar() {
   const location = useLocation();
@@ -12,55 +12,53 @@ function Sidebar() {
   };
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/meals', icon: Utensils, label: 'My Meals' },
-    { path: '/insights', icon: TrendingUp, label: 'Insights' },
-    { path: '/swaps', icon: Sparkles, label: 'Healthy Swaps' },
+    { path: '/discover', icon: Search, label: 'Discover & Swap' },
+    { path: '/fridge', icon: Snowflake, label: 'Fridge Meals' },
+    { path: '/insights', icon: MessageSquare, label: 'AI Insights' },
     { path: '/profile', icon: User, label: 'Profile' },
   ];
 
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
+    <div className="w-64 bg-[#faf9f6] border-r border-[#e0e8e0] min-h-screen flex flex-col font-sans">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-200">
-        <Link to="/dashboard" className="flex items-center">
-          <Leaf className="w-8 h-8 mr-2 text-[#22C55E]" />
-          <h1 className="text-xl font-extrabold text-[#111827]">
-            Mood<span className="text-[#22C55E]">Meal</span>
+      <div className="p-8 border-b border-[#e0e8e0]">
+        <Link to="/discover" className="flex items-center gap-2">
+          <Leaf className="w-8 h-8 text-[#6b8e6b]" />
+          <h1 className="text-2xl font-serif font-bold text-[#2c3e2d] tracking-tight">
+            MoodMeal
           </h1>
         </Link>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-medium transition-all duration-300 ${
                 isActive(item.path)
-                  ? 'bg-[#DCFCE7] text-[#166534]'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#edf2ec] text-[#2c3e2d] shadow-sm'
+                  : 'text-[#5c705c] hover:bg-white hover:text-[#2c3e2d]'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive(item.path) ? 'text-[#166534]' : ''}`} />
+              <Icon className={`w-5 h-5 ${isActive(item.path) ? 'text-[#6b8e6b]' : 'opacity-70'}`} />
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-6 border-t border-[#e0e8e0]">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-all"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-2xl font-medium text-[#c05b5b] bg-white border border-[#f0d8d8] hover:bg-[#fdf4f4] transition-all duration-300"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-4 h-4" />
           <span>Logout</span>
         </button>
       </div>

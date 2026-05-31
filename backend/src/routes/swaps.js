@@ -3,6 +3,7 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 const { authenticateToken } = require('../middleware/authMid');
+const { generateHealthySwap, generateSwapRecipe } = require('../services/aiService');
 
 const prisma = new PrismaClient();
 
@@ -59,6 +60,44 @@ router.get('/search', authenticateToken, (req, res) => {
     found: false,
     message: 'No preset swaps found. You can create your own!'
   });
+});
+
+//create
+router.post('/ai-swap', authenticateToken, async (req, res) => {
+  try {
+    const { craving } = req.body;
+    if (!craving) {
+      return res.status(400).json({ error: 'Craving is required' });
+    }
+    
+    const swapResult = await generateHealthySwap(craving);
+    res.json({
+      success: true,
+      swap: swapResult
+    });
+  } catch (error) {
+    console.error('AI Swap Error:', error);
+    res.status(500).json({ error: 'Failed to generate healthy swap via AI' });
+  }
+});
+
+//create recipe
+router.post('/ai-recipe', authenticateToken, async (req, res) => {
+  try {
+    const { suggestion } = req.body;
+    if (!suggestion) {
+      return res.status(400).json({ error: 'Suggestion is required' });
+    }
+    
+    const recipeResult = await generateSwapRecipe(suggestion);
+    res.json({
+      success: true,
+      recipe: recipeResult
+    });
+  } catch (error) {
+    console.error('AI Recipe Error:', error);
+    res.status(500).json({ error: 'Failed to generate recipe via AI' });
+  }
 });
 
 //create

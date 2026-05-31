@@ -57,6 +57,8 @@ model CuratedMeal {
   category    String
   description String?
   imageUrl    String
+  time        String?
+  tags        Json?
 }
 
 model MoodLog {
